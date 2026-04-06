@@ -1546,6 +1546,21 @@ form button[type='button'] {
   justify-content: center;
 }
 
+.adm-mobile-nav {
+  display: none;
+}
+
+.adm-mobile-nav-select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .adm-nav {
   flex: 1;
   padding: 12px 8px;
@@ -2201,13 +2216,16 @@ form button[type='button'] {
   .adm-sidebar-logo img { height: 26px; }
   .adm-sidebar-user { display: flex; }
 
+  .adm-mobile-nav {
+    display: block;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+  }
+
   /* Nav horizontal com scroll */
   .adm-nav {
+    display: none;
     flex: none;
-    display: flex;
-    width: 100%;
-    min-height: 44px;
-    background: var(--bg-section);
     flex-direction: row;
     overflow-x: auto;
     padding: 6px 8px;

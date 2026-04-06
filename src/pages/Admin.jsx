@@ -43,6 +43,19 @@ function Admin() {
           </button>
         </div>
 
+        <div className="adm-mobile-nav" aria-label="Menu do admin (mobile)">
+          <select
+            className="adm-mobile-nav-select"
+            value={tab}
+            onChange={(e) => setTab(e.target.value)}
+            aria-label="Selecionar seção do admin"
+          >
+            {TABS.map(t => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+
         <nav className="adm-nav">
           {TABS.map(t => (
             <button
