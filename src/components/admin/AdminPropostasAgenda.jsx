@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { usePropostasAgenda } from '../../hooks/usePropostas'
+import { supabase } from '../../lib/supabase'
+import { formatPhoneBR, toWhatsAppUrl } from '../../utils/phone'
 
 const STATUS_OPTS = [
   { value: '', label: 'Todos' },
@@ -12,15 +14,51 @@ function StatusBadge({ status }) {
   return <span className={`adm-badge adm-badge--proposta-${status}`}>{status}</span>
 }
 
-function AcaoModal({ item, onSave, onClose }) {
+function buildGoogleMapsUrl(localNome, localEndereco) {
+  const query = [localNome, localEndereco].filter(Boolean).join(', ').trim()
+  if (!query) return null
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
+function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
   const [status, setStatus] = useState(item.status)
   const [observacao, setObservacao] = useState(item.observacao ?? '')
   const [saving, setSaving] = useState(false)
+  const [creatingAgenda, setCreatingAgenda] = useState(false)
+  const [agendaErro, setAgendaErro] = useState('')
+  const [agendaForm, setAgendaForm] = useState({
+    titulo: item.cidade ? `Agenda em ${item.cidade}` : `Agenda com ${item.nome}`,
+    data: '',
+    hora: '',
+    local_nome: '',
+    local_endereco: item.cidade || '',
+    descricao: item.mensagem || '',
+    publicado: true,
+  })
 
   async function handleSave() {
     setSaving(true)
     await onSave(item.id, status, observacao)
     setSaving(false)
+    onClose()
+  }
+
+  async function handleCriarAgenda() {
+    if (!agendaForm.titulo || !agendaForm.data) {
+      setAgendaErro('Título e data são obrigatórios para criar a agenda.')
+      return
+    }
+
+    setAgendaErro('')
+    setCreatingAgenda(true)
+    const erro = await onCriarAgenda(item, agendaForm, observacao)
+    setCreatingAgenda(false)
+
+    if (erro) {
+      setAgendaErro(erro)
+      return
+    }
+
     onClose()
   }
 
@@ -31,7 +69,7 @@ function AcaoModal({ item, onSave, onClose }) {
         <h2>Avaliar convite</h2>
         <p><b>Nome:</b> {item.nome}</p>
         <p><b>Cidade:</b> {item.cidade}{item.uf ? ` — ${item.uf}` : ''}</p>
-        <p><b>Contato:</b> <a href={`https://wa.me/55${item.telefone}`} target="_blank" rel="noopener noreferrer" className="adm-link">{item.telefone}</a></p>
+        <p><b>Contato:</b> <a href={toWhatsAppUrl(item.telefone)} target="_blank" rel="noopener noreferrer" className="adm-link">{formatPhoneBR(item.telefone)}</a></p>
         {item.email && <p><b>Email:</b> {item.email}</p>}
         {item.mensagem && (
           <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
@@ -63,6 +101,84 @@ function AcaoModal({ item, onSave, onClose }) {
         <button className="adm-btn adm-btn-primary" style={{ marginTop: 16, width: '100%' }} onClick={handleSave} disabled={saving}>
           {saving ? 'Salvando…' : 'Salvar'}
         </button>
+
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <h3 style={{ fontSize: 15, marginBottom: 10 }}>Criar agenda a partir da proposta</h3>
+
+          <div className="adm-field" style={{ marginTop: 8 }}>
+            <label>Título *</label>
+            <input
+              className="adm-input"
+              value={agendaForm.titulo}
+              onChange={e => setAgendaForm(f => ({ ...f, titulo: e.target.value }))}
+              placeholder="Título da agenda"
+            />
+          </div>
+
+          <div className="adm-agenda-row" style={{ marginTop: 8 }}>
+            <div className="adm-field">
+              <label>Data *</label>
+              <input
+                className="adm-input"
+                type="date"
+                value={agendaForm.data}
+                onChange={e => setAgendaForm(f => ({ ...f, data: e.target.value }))}
+              />
+            </div>
+            <div className="adm-field">
+              <label>Hora</label>
+              <input
+                className="adm-input"
+                type="time"
+                value={agendaForm.hora}
+                onChange={e => setAgendaForm(f => ({ ...f, hora: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="adm-field" style={{ marginTop: 8 }}>
+            <label>Local</label>
+            <input
+              className="adm-input"
+              value={agendaForm.local_nome}
+              onChange={e => setAgendaForm(f => ({ ...f, local_nome: e.target.value }))}
+              placeholder="Nome do local"
+            />
+            <input
+              className="adm-input"
+              style={{ marginTop: 6 }}
+              value={agendaForm.local_endereco}
+              onChange={e => setAgendaForm(f => ({ ...f, local_endereco: e.target.value }))}
+              placeholder="Endereço (opcional)"
+            />
+          </div>
+
+          <div className="adm-field" style={{ marginTop: 8 }}>
+            <label>Descrição</label>
+            <textarea
+              className="adm-input adm-textarea"
+              rows={3}
+              value={agendaForm.descricao}
+              onChange={e => setAgendaForm(f => ({ ...f, descricao: e.target.value }))}
+              placeholder="Detalhes do evento…"
+            />
+          </div>
+
+          <label className="adm-check-label" style={{ marginTop: 8 }}>
+            <input
+              type="checkbox"
+              checked={agendaForm.publicado}
+              onChange={e => setAgendaForm(f => ({ ...f, publicado: e.target.checked }))}
+            />
+            Publicar no site ao criar
+          </label>
+
+          {agendaErro && <p className="adm-error" style={{ marginTop: 8 }}>{agendaErro}</p>}
+
+          <button className="adm-btn adm-btn-primary" style={{ marginTop: 12, width: '100%' }} onClick={handleCriarAgenda} disabled={creatingAgenda || saving}>
+            {creatingAgenda ? 'Criando agenda…' : 'Criar agenda'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -75,6 +191,37 @@ function AdminPropostasAgenda() {
   const [removendo, setRemovendo] = useState(null)
 
   const { items, loading, error, atualizarStatus, remover } = usePropostasAgenda({ search, status })
+
+  async function handleCriarAgenda(item, agendaForm, observacaoAtual) {
+    const payload = {
+      titulo: agendaForm.titulo,
+      data: agendaForm.data,
+      hora: agendaForm.hora || null,
+      local_nome: agendaForm.local_nome || null,
+      local_endereco: agendaForm.local_endereco || null,
+      local_maps_url: buildGoogleMapsUrl(agendaForm.local_nome, agendaForm.local_endereco),
+      local_place_id: null,
+      descricao: agendaForm.descricao || null,
+      imagem_url: null,
+      publicado: agendaForm.publicado ?? true,
+    }
+
+    const { data: agendaCriada, error: agendaError } = await supabase
+      .from('agendas')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (agendaError) return agendaError.message
+
+    const observacaoFinal = [
+      observacaoAtual,
+      `Agenda criada pelo admin (id: ${agendaCriada?.id}).`,
+    ].filter(Boolean).join(' ')
+
+    const statusError = await atualizarStatus(item.id, 'confirmado', observacaoFinal)
+    return statusError
+  }
 
   async function handleRemover(id) {
     if (!confirm('Remover este convite?')) return
@@ -120,8 +267,8 @@ function AdminPropostasAgenda() {
                 <tr key={item.id}>
                   <td>{item.nome}</td>
                   <td>
-                    <a href={`https://wa.me/55${item.telefone}`} target="_blank" rel="noopener noreferrer" className="adm-link">
-                      {item.telefone}
+                    <a href={toWhatsAppUrl(item.telefone)} target="_blank" rel="noopener noreferrer" className="adm-link">
+                      {formatPhoneBR(item.telefone)}
                     </a>
                   </td>
                   <td>{[item.cidade, item.uf].filter(Boolean).join(' / ') || '—'}</td>
@@ -151,6 +298,7 @@ function AdminPropostasAgenda() {
         <AcaoModal
           item={modal}
           onSave={atualizarStatus}
+          onCriarAgenda={handleCriarAgenda}
           onClose={() => setModal(null)}
         />
       )}
