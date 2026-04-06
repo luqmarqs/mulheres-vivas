@@ -69,7 +69,23 @@ export function useComites({ search = '', apenasAtivos = true } = {}) {
     return null
   }
 
-  return { comites, loading, error, refetch: fetchComites, criar }
+  async function remover(id) {
+    const [{ error: membrosError }, { error: leadsError }] = await Promise.all([
+      supabase.from('membros_comite').delete().eq('comite_id', id),
+      supabase.from('leads').update({ comite_id: null }).eq('comite_id', id),
+    ])
+
+    if (membrosError) return membrosError.message
+    if (leadsError) return leadsError.message
+
+    const { error } = await supabase.from('comites').delete().eq('id', id)
+    if (error) return error.message
+
+    await fetchComites()
+    return null
+  }
+
+  return { comites, loading, error, refetch: fetchComites, criar, remover }
 }
 
 export function useComiteDetalhe(id) {

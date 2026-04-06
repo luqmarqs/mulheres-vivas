@@ -29,6 +29,7 @@ function AcaoModal({ item, onSave, onClose }) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
         <h2>Atualizar proposta</h2>
+        <p style={{ marginTop: 8, color: 'var(--text-muted)' }}>Aprovar esta proposta não cria um comitê automaticamente. A criação do comitê acontece separadamente na área de Comitês.</p>
         <p><b>Nome:</b> {item.nome}</p>
         <p><b>Cidade:</b> {item.cidade}{item.uf ? ` — ${item.uf}` : ''}</p>
         {item.whatsapp_link && <p><b>WhatsApp:</b> <a href={item.whatsapp_link} target="_blank" rel="noopener noreferrer" className="adm-link">Abrir grupo</a></p>}
@@ -79,7 +80,7 @@ function AdminPropostasComite() {
   return (
     <div>
       <h2 className="adm-section-title">Propostas de Comitê</h2>
-      <p className="adm-section-desc">Solicitações enviadas por pessoas que querem organizar um comitê na cidade delas. Clique em <strong>Ver / Responder</strong> para avaliar a proposta, mudar o status para <em>aprovado</em> ou <em>recusado</em> e deixar uma observação interna. O contato também fica registrado em Leads.</p>
+      <p className="adm-section-desc">Solicitações enviadas por pessoas que querem organizar um comitê na cidade delas. Clique em <strong>Avaliar</strong> para revisar a proposta, mudar o status para <em>aprovado</em> ou <em>recusado</em> e deixar uma observação interna. Esta etapa não cria comitê automaticamente: a criação é uma decisão manual do admin na área de Comitês.</p>
 
       <div className="adm-filters">
         <input className="adm-input" placeholder="Buscar nome ou cidade…" value={search} onChange={e => setSearch(e.target.value)} />

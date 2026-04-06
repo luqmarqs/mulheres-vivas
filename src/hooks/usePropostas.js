@@ -53,11 +53,12 @@ export async function insertPropostaComite(form) {
       email: form.email || null,
       cidade: form.cidade || null,
       uf: form.uf || null,
-      whatsapp_link: form.whatsapp_link || null,
+      whatsapp_link: null,
       status: 'pendente',
     }),
     upsertLead(form, 'organizar'),
   ])
+
   return { error: error?.message ?? null }
 }
 

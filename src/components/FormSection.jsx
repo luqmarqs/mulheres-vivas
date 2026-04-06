@@ -7,13 +7,13 @@ import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR } from '../utils/phone'
 
 const TABS = [
   { id: 'assinar',  label: '✊ Abaixo-assinado' },
-  { id: 'comite',   label: '🏘️ Organizar comitê' },
+  { id: 'comite',   label: '🏘️ Quero participar ou criar um comitê' },
   { id: 'convidar', label: '📣 Convidar a Bancada' },
 ]
 
 const EMPTY_FORM = {
   nome: '', nascimento: '', telefone: '', email: '',
-  cidade: '', uf: '', novidades: true, whatsapp_link: '',
+  cidade: '', uf: '', novidades: true,
   mensagem: '',
 }
 
@@ -108,7 +108,7 @@ function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, s
 function FormSucesso({ tab, onReset, onShare }) {
   const msgs = {
     assinar:  { titulo: 'Assinatura registrada!', corpo: 'Obrigada por assinar. Juntas somos mais fortes!' },
-    comite:   { titulo: 'Comitê criado!', corpo: 'Em breve nossa equipe entrará em contato com você.' },
+    comite:   { titulo: 'Proposta enviada!', corpo: 'Recebemos sua proposta de comitê. A criação do comitê é feita pela equipe no admin após avaliação.' },
     convidar: { titulo: 'Convite enviado!', corpo: 'Recebemos seu pedido. Avaliaremos a agenda e entraremos em contato.' },
   }
   const { titulo, corpo } = msgs[tab]
@@ -241,12 +241,6 @@ function FormSection({ onOpenPrivacy, onShare }) {
               {activeTab === 'comite' && (
                 <>
                   {camposBase}
-                  <input
-                    type="url"
-                    placeholder="Link do grupo WhatsApp do comitê (opcional)"
-                    value={form.whatsapp_link}
-                    onChange={e => setForm({ ...form, whatsapp_link: e.target.value })}
-                  />
                   <label className="newsletter">
                     <input type="checkbox" checked={form.novidades} onChange={e => setForm({ ...form, novidades: e.target.checked })} />
                     Aceito receber novidades da campanha

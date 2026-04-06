@@ -253,10 +253,11 @@ function AddMembro({ onAdicionar }) {
   )
 }
 
-function ComiteDetalhe({ id, onBack, onRefetch }) {
+function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
   const { comite, membros, loading, adicionarMembro, removerMembro } = useComiteDetalhe(id)
   const [toggling, setToggling] = useState(false)
   const [removendo, setRemovendo] = useState(null)
+  const [excluindo, setExcluindo] = useState(false)
 
   async function toggleAtivo() {
     setToggling(true)
@@ -271,6 +272,24 @@ function ComiteDetalhe({ id, onBack, onRefetch }) {
     setRemovendo(null)
   }
 
+  async function handleExcluirComite() {
+    if (!comite) return
+
+    const confirmou = window.confirm(`Excluir o comitê "${comite.nome}"? Essa ação remove o comitê do banco, apaga os membros persistidos e desvincula os leads associados.`)
+    if (!confirmou) return
+
+    setExcluindo(true)
+    const erro = await onExcluir(id)
+    setExcluindo(false)
+
+    if (erro) {
+      window.alert(`Não foi possível excluir o comitê: ${erro}`)
+      return
+    }
+
+    onBack()
+  }
+
   if (loading) return <div className="adm-loading">Carregando…</div>
   if (!comite) return null
 
@@ -283,13 +302,18 @@ function ComiteDetalhe({ id, onBack, onRefetch }) {
           <h2 className="adm-section-title">{comite.nome}</h2>
           <p className="adm-sub">{comite.cidade}{comite.estado ? ` — ${comite.estado}` : ''}</p>
         </div>
-        <button
-          className={`adm-btn ${comite.ativo ? 'adm-btn-outline' : 'adm-btn-primary'}`}
-          onClick={toggleAtivo}
-          disabled={toggling}
-        >
-          {comite.ativo ? 'Desativar' : 'Reativar'}
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className={`adm-btn ${comite.ativo ? 'adm-btn-outline' : 'adm-btn-primary'}`}
+            onClick={toggleAtivo}
+            disabled={toggling || excluindo}
+          >
+            {comite.ativo ? 'Desativar' : 'Reativar'}
+          </button>
+          <button className="adm-btn-danger" onClick={handleExcluirComite} disabled={excluindo || toggling}>
+            {excluindo ? 'Excluindo…' : 'Excluir comitê'}
+          </button>
+        </div>
       </div>
 
       <div className="adm-comite-info">
@@ -355,7 +379,21 @@ function AdminComites() {
   const [apenasAtivos, setApenasAtivos] = useState(false)
   const [detalheId, setDetalheId] = useState(null)
   const [criando, setCriando] = useState(false)
-  const { comites, loading, error, refetch, criar } = useComites({ search, apenasAtivos })
+  const [excluindoId, setExcluindoId] = useState(null)
+  const { comites, loading, error, refetch, criar, remover } = useComites({ search, apenasAtivos })
+
+  async function handleExcluirComite(id, nome) {
+    const confirmou = window.confirm(`Excluir o comitê "${nome}"? Essa ação remove o comitê do banco, apaga os membros persistidos e desvincula os leads associados.`)
+    if (!confirmou) return
+
+    setExcluindoId(id)
+    const erro = await remover(id)
+    setExcluindoId(null)
+
+    if (erro) {
+      window.alert(`Não foi possível excluir o comitê: ${erro}`)
+    }
+  }
 
   if (detalheId) {
     return (
@@ -363,6 +401,7 @@ function AdminComites() {
         id={detalheId}
         onBack={() => { setDetalheId(null); refetch() }}
         onRefetch={refetch}
+        onExcluir={remover}
       />
     )
   }
@@ -430,9 +469,14 @@ function AdminComites() {
                     </span>
                   </td>
                   <td>
-                    <button className="adm-btn adm-btn-sm" onClick={() => setDetalheId(c.id)}>
-                      Ver →
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <button className="adm-btn adm-btn-sm" onClick={() => setDetalheId(c.id)}>
+                        Ver →
+                      </button>
+                      <button className="adm-btn-danger" onClick={() => handleExcluirComite(c.id, c.nome)} disabled={excluindoId === c.id}>
+                        {excluindoId === c.id ? '…' : 'Excluir'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
