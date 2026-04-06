@@ -259,6 +259,19 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
   const [removendo, setRemovendo] = useState(null)
   const [excluindo, setExcluindo] = useState(false)
 
+  function isResponsavel(membro) {
+    const telResponsavel = normalizePhoneBR(comite?.responsavel_telefone)
+    const telMembro = normalizePhoneBR(membro?.telefone)
+
+    if (telResponsavel && telMembro) {
+      return telResponsavel === telMembro
+    }
+
+    const nomeResponsavel = String(comite?.responsavel_nome || '').trim().toLowerCase()
+    const nomeMembro = String(membro?.nome || '').trim().toLowerCase()
+    return !!nomeResponsavel && !!nomeMembro && nomeResponsavel === nomeMembro
+  }
+
   async function toggleAtivo() {
     setToggling(true)
     await supabase.from('comites').update({ ativo: !comite.ativo }).eq('id', id)
@@ -345,6 +358,9 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
                   <td>{m.nome}</td>
                   <td>
                     <span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span>
+                    {isResponsavel(m) && (
+                      <span className="adm-badge adm-badge--ativo" style={{ marginLeft: 6 }}>responsável</span>
+                    )}
                     {m.origem_membro === 'lead' && (
                       <span className="adm-badge adm-badge--origem" style={{ marginLeft: 6 }}>lead</span>
                     )}
