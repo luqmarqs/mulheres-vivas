@@ -19,7 +19,7 @@ function buildRows(leads) {
     Cidade: l.cidade ?? '',
     UF: l.uf ?? '',
     Origem: l.origem ?? '',
-    'Intenção': l.intencao === 'organizar' ? 'Organizar comitê' : l.intencao === 'convidar' ? 'Convidar Bancada' : 'Participar',
+    'Intenção': l.intencao === 'organizar' ? 'Participar ou criar comitê' : l.intencao === 'convidar' ? 'Convidar Bancada' : 'Participar',
     Comitê: l.comites?.nome ?? '',
     Data: new Date(l.created_at).toLocaleDateString('pt-BR'),
   }))
@@ -93,7 +93,7 @@ function AdminLeads() {
         <select className="adm-input" value={intencao} onChange={e => setIntencao(e.target.value)}>
           <option value="">Todas as intenções</option>
           <option value="participar">Participar</option>
-          <option value="organizar">Organizar comitê</option>
+          <option value="organizar">Participar ou criar comitê</option>
         </select>
       </div>
 
@@ -136,7 +136,7 @@ function AdminLeads() {
                   </td>
                   <td>
                     <span className={`adm-badge adm-badge--${l.intencao}`}>
-                      {l.intencao === 'organizar' ? 'Organizar' : l.intencao === 'convidar' ? 'Convidar' : 'Participar'}
+                      {l.intencao === 'organizar' ? 'Comitê' : l.intencao === 'convidar' ? 'Convidar' : 'Participar'}
                     </span>
                   </td>
                   <td>{l.comites?.nome ?? '—'}</td>
