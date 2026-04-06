@@ -18,7 +18,7 @@ function Hero({ onShare }) {
               document.getElementById('assinar')?.scrollIntoView({ behavior: 'smooth' })
             }}
           >
-            Assinar o abaixo-assinado
+            Quero me mobilizar
           </a>
 
           <button className="btn btn-whatsapp" onClick={onShare}>

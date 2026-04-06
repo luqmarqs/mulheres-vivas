@@ -1,30 +1,27 @@
 import MapaFeminicidio from './MapaFeminicidio'
+import AgendasSection from './AgendasSection'
 
 const cards = [
   {
-    icon: '🚨',
-    title: 'Estado de emergência',
-    body: 'Exigimos que o poder público declare estado de emergência pública em São Paulo diante do crescimento alarmante do feminicídio e da violência doméstica.',
+    icon: '✍️',
+    title: 'Assine o abaixo-assinado',
+    body: 'Exigimos que o governador declare estado de emergência pública diante do crescimento alarmante do feminicídio em São Paulo. Cada assinatura é uma voz.',
   },
   {
-    icon: '📊',
-    title: 'Dados que são vidas',
-    body: 'São Paulo registra centenas de feminicídios por ano e os números seguem crescendo. Cada estatística é uma mulher, uma família, uma comunidade destruída.',
+    icon: '🏘️',
+    title: 'Organize um comitê',
+    body: 'Forme um comitê na sua cidade, bairro ou escola. Os comitês são a base da campanha — é onde a mobilização acontece de verdade.',
   },
   {
-    icon: '✊',
-    title: 'Bancada Feminista',
-    body: 'Somos vereadoras, codeputadas e ativistas eleitas pelo PSOL para colocar as pautas das mulheres no centro da política. Nossa luta é dentro e fora das instituições.',
-  },
-  {
-    icon: '📢',
-    title: 'Pressão popular',
-    body: 'Cada assinatura é uma voz. Quanto mais pessoas assinarem, maior a pressão sobre o poder público para agir. A indiferença também mata.',
+    icon: '📣',
+    title: 'Convide a Bancada',
+    body: 'Quer que a Bancada Feminista venha ao seu evento, escola ou comunidade? Faça o convite e nossa equipe avalia a agenda.',
   },
 ]
 
 function ContentSection() {
   return (
+    <>
     <section className="content-section">
       <div className="container">
         <div className="content-header">
@@ -41,9 +38,11 @@ function ContentSection() {
             não é inevitável — é resultado de omissão e descaso do poder público.
           </p>
           <p>
-            A Bancada Feminista do PSOL lança a campanha <strong>Mulheres Vivas</strong> e
-            exige que o governador de São Paulo declare estado de emergência pública.
-            Assine o abaixo-assinado e some sua voz a essa luta.
+            A <strong>Bancada Feminista do PSOL</strong> — covereadoras, codeputadas e
+            ativistas eleitas para colocar as pautas das mulheres no centro da política —
+            lança a campanha <strong>Mulheres Vivas</strong>: um movimento de pressão
+            popular com abaixo-assinado, comitês de base em todo o estado e presença
+            direta nas comunidades. Assine, organize e convide — cada ação conta.
           </p>
         </div>
 
@@ -69,6 +68,9 @@ function ContentSection() {
         <MapaFeminicidio />
       </div>
     </section>
+
+    <AgendasSection />
+    </>
   )
 }
 

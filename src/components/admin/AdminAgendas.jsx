@@ -1,0 +1,277 @@
+import { useState, useEffect, useRef } from 'react'
+import { useAgendasAdmin } from '../../hooks/useAgendas'
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
+
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? ''
+
+if (MAPS_KEY) {
+  setOptions({ key: MAPS_KEY, v: 'weekly' })
+}
+
+const FORM_VAZIO = {
+  titulo: '',
+  data: '',
+  hora: '',
+  local_nome: '',
+  local_endereco: '',
+  local_maps_url: '',
+  local_place_id: '',
+  descricao: '',
+  imagem_url: '',
+  publicado: false,
+}
+
+function LocalInput({ form, setForm }) {
+  const inputRef = useRef(null)
+  const [mapsDisponivel, setMapsDisponivel] = useState(false)
+
+  useEffect(() => {
+    if (!MAPS_KEY) return
+
+    importLibrary('places').then(({ Autocomplete }) => {
+      setMapsDisponivel(true)
+      if (!inputRef.current) return
+
+      const autocomplete = new Autocomplete(inputRef.current, {
+        fields: ['name', 'formatted_address', 'place_id', 'url'],
+        componentRestrictions: { country: 'br' },
+      })
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        setForm(f => ({
+          ...f,
+          local_nome: place.name ?? '',
+          local_endereco: place.formatted_address ?? '',
+          local_maps_url: place.url ?? '',
+          local_place_id: place.place_id ?? '',
+        }))
+      })
+    }).catch(() => {})
+  }, [setForm])
+
+  return (
+    <div className="adm-field">
+      <label>Local</label>
+      <input
+        ref={inputRef}
+        className="adm-input"
+        placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
+        value={form.local_nome}
+        onChange={e => setForm(f => ({ ...f, local_nome: e.target.value, local_maps_url: '', local_place_id: '' }))}
+      />
+      {form.local_maps_url && (
+        <a href={form.local_maps_url} target="_blank" rel="noopener noreferrer" className="adm-link" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
+          ✓ {form.local_endereco} — Ver no Maps →
+        </a>
+      )}
+      {!form.local_maps_url && form.local_nome && (
+        <input
+          className="adm-input"
+          style={{ marginTop: 6 }}
+          placeholder="Endereço (opcional)"
+          value={form.local_endereco}
+          onChange={e => setForm(f => ({ ...f, local_endereco: e.target.value }))}
+        />
+      )}
+    </div>
+  )
+}
+
+function FormAgenda({ inicial, onSalvar, onCancelar }) {
+  const [form, setForm] = useState(inicial ?? FORM_VAZIO)
+  const [imagemFile, setImagemFile] = useState(null)
+  const [preview, setPreview] = useState(inicial?.imagem_url ?? null)
+  const [saving, setSaving] = useState(false)
+  const [erro, setErro] = useState('')
+
+  function handleImagem(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    setImagemFile(file)
+    setPreview(URL.createObjectURL(file))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.titulo || !form.data) { setErro('Título e data são obrigatórios.'); return }
+    setSaving(true)
+    const err = await onSalvar(form, imagemFile, inicial?.id ?? null)
+    setSaving(false)
+    if (err) setErro(err)
+    else onCancelar()
+  }
+
+  return (
+    <div className="adm-chart-card">
+      <h3>{inicial ? 'Editar agenda' : 'Nova agenda'}</h3>
+      <form className="adm-agenda-form" onSubmit={handleSubmit}>
+
+        <div className="adm-field">
+          <label>Título *</label>
+          <input className="adm-input" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} required />
+        </div>
+
+        <div className="adm-agenda-row">
+          <div className="adm-field">
+            <label>Data *</label>
+            <input className="adm-input" type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} required />
+          </div>
+          <div className="adm-field">
+            <label>Hora</label>
+            <input className="adm-input" type="time" value={form.hora} onChange={e => setForm(f => ({ ...f, hora: e.target.value }))} />
+          </div>
+        </div>
+
+        <LocalInput form={form} setForm={setForm} />
+
+        <div className="adm-field">
+          <label>Descrição</label>
+          <textarea className="adm-input adm-textarea" rows={3} value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} placeholder="Detalhes do evento…" />
+        </div>
+
+        <div className="adm-field">
+          <label>Imagem</label>
+          {preview && <img src={preview} alt="preview" className="adm-agenda-preview" />}
+          <input type="file" accept="image/*" onChange={handleImagem} className="adm-file-input" />
+        </div>
+
+        <label className="adm-check-label" style={{ marginTop: 4 }}>
+          <input type="checkbox" checked={form.publicado} onChange={e => setForm(f => ({ ...f, publicado: e.target.checked }))} />
+          Publicar no site
+        </label>
+
+        {erro && <p className="adm-error">{erro}</p>}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <button className="adm-btn adm-btn-primary" type="submit" disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar'}
+          </button>
+          <button className="adm-btn adm-btn-outline" type="button" onClick={onCancelar}>
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function AdminAgendas() {
+  const [search, setSearch] = useState('')
+  const [criando, setCriando] = useState(false)
+  const [editando, setEditando] = useState(null)
+  const [removendo, setRemovendo] = useState(null)
+
+  const { agendas, loading, error, togglePublicado, remover, salvar } = useAgendasAdmin({ search })
+
+  async function handleRemover(agenda) {
+    if (!confirm(`Remover "${agenda.titulo}"?`)) return
+    setRemovendo(agenda.id)
+    await remover(agenda.id, agenda.imagem_url)
+    setRemovendo(null)
+  }
+
+  function formatarData(dataStr) {
+    const [ano, mes, dia] = dataStr.split('-')
+    return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  if (criando) return (
+    <FormAgenda
+      onSalvar={salvar}
+      onCancelar={() => setCriando(false)}
+    />
+  )
+
+  if (editando) return (
+    <FormAgenda
+      inicial={editando}
+      onSalvar={salvar}
+      onCancelar={() => setEditando(null)}
+    />
+  )
+
+  return (
+    <div>
+      <div className="adm-section-header">
+        <h2 className="adm-section-title">Agendas</h2>
+        <button className="adm-btn adm-btn-primary" onClick={() => setCriando(true)}>
+          + Nova agenda
+        </button>
+      </div>
+
+      <div className="adm-filters">
+        <input className="adm-input" placeholder="Buscar pelo título…" value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      {error && <p className="adm-error">{error}</p>}
+
+      {!MAPS_KEY && (
+        <p className="adm-error" style={{ marginBottom: 12 }}>
+          ⚠️ VITE_GOOGLE_MAPS_KEY não configurado — busca de local desativada.
+        </p>
+      )}
+
+      {loading ? (
+        <div className="adm-loading">Carregando…</div>
+      ) : agendas.length === 0 ? (
+        <div className="adm-empty">Nenhuma agenda criada ainda.</div>
+      ) : (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>Imagem</th>
+                <th>Título</th>
+                <th>Data</th>
+                <th>Hora</th>
+                <th>Local</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {agendas.map(a => (
+                <tr key={a.id}>
+                  <td>
+                    {a.imagem_url
+                      ? <img src={a.imagem_url} alt={a.titulo} className="adm-agenda-thumb" />
+                      : <span style={{ color: '#6b5a80', fontSize: 12 }}>—</span>}
+                  </td>
+                  <td>{a.titulo}</td>
+                  <td>{formatarData(a.data)}</td>
+                  <td>{a.hora ? a.hora.slice(0, 5) : '—'}</td>
+                  <td>
+                    {a.local_maps_url
+                      ? <a href={a.local_maps_url} target="_blank" rel="noopener noreferrer" className="adm-link">{a.local_nome}</a>
+                      : (a.local_nome ?? '—')}
+                  </td>
+                  <td>
+                    <button
+                      className={`adm-badge adm-badge--${a.publicado ? 'ativo' : 'inativo'}`}
+                      style={{ border: 'none', cursor: 'pointer', background: 'inherit' }}
+                      onClick={() => togglePublicado(a.id, a.publicado)}
+                      title="Clique para alternar"
+                    >
+                      {a.publicado ? 'Publicado' : 'Rascunho'}
+                    </button>
+                  </td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    <button className="adm-btn adm-btn-sm adm-btn-outline" onClick={() => setEditando(a)}>Editar</button>
+                    <button className="adm-btn-danger" onClick={() => handleRemover(a)} disabled={removendo === a.id}>
+                      {removendo === a.id ? '…' : '×'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <p className="adm-count">{agendas.length} agenda{agendas.length !== 1 ? 's' : ''}</p>
+    </div>
+  )
+}
+
+export default AdminAgendas
