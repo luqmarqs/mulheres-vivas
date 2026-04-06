@@ -26,6 +26,8 @@ function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
   const [saving, setSaving] = useState(false)
   const [creatingAgenda, setCreatingAgenda] = useState(false)
   const [agendaErro, setAgendaErro] = useState('')
+  const [agendaImagemFile, setAgendaImagemFile] = useState(null)
+  const [agendaImagemPreview, setAgendaImagemPreview] = useState('')
   const [agendaForm, setAgendaForm] = useState({
     titulo: item.cidade ? `Agenda em ${item.cidade}` : `Agenda com ${item.nome}`,
     data: '',
@@ -35,6 +37,18 @@ function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
     descricao: item.mensagem || '',
     publicado: true,
   })
+
+  function handleAgendaImagem(e) {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setAgendaImagemFile(null)
+      setAgendaImagemPreview('')
+      return
+    }
+
+    setAgendaImagemFile(file)
+    setAgendaImagemPreview(URL.createObjectURL(file))
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -51,7 +65,7 @@ function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
 
     setAgendaErro('')
     setCreatingAgenda(true)
-    const erro = await onCriarAgenda(item, agendaForm, observacao)
+    const erro = await onCriarAgenda(item, agendaForm, agendaImagemFile, observacao)
     setCreatingAgenda(false)
 
     if (erro) {
@@ -164,6 +178,12 @@ function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
             />
           </div>
 
+          <div className="adm-field" style={{ marginTop: 8 }}>
+            <label>Imagem</label>
+            {agendaImagemPreview && <img src={agendaImagemPreview} alt="preview" className="adm-agenda-preview" />}
+            <input type="file" accept="image/*" onChange={handleAgendaImagem} className="adm-file-input" />
+          </div>
+
           <label className="adm-check-label" style={{ marginTop: 8 }}>
             <input
               type="checkbox"
@@ -192,7 +212,23 @@ function AdminPropostasAgenda() {
 
   const { items, loading, error, atualizarStatus, remover } = usePropostasAgenda({ search, status })
 
-  async function handleCriarAgenda(item, agendaForm, observacaoAtual) {
+  async function handleCriarAgenda(item, agendaForm, imagemFile, observacaoAtual) {
+    let imagemUrl = null
+
+    if (imagemFile) {
+      const ext = imagemFile.name.split('.').pop()
+      const path = `${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('agendas')
+        .upload(path, imagemFile, { upsert: true })
+
+      if (uploadError) return uploadError.message
+
+      const { data: urlData } = supabase.storage.from('agendas').getPublicUrl(path)
+      imagemUrl = urlData?.publicUrl ?? null
+    }
+
     const payload = {
       titulo: agendaForm.titulo,
       data: agendaForm.data,
@@ -202,7 +238,7 @@ function AdminPropostasAgenda() {
       local_maps_url: buildGoogleMapsUrl(agendaForm.local_nome, agendaForm.local_endereco),
       local_place_id: null,
       descricao: agendaForm.descricao || null,
-      imagem_url: null,
+      imagem_url: imagemUrl,
       publicado: agendaForm.publicado ?? true,
     }
 
