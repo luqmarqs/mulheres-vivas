@@ -70,14 +70,11 @@ function AdminLeads() {
       <div className="adm-section-header">
         <h2 className="adm-section-title">Leads</h2>
         <div className="adm-export-btns">
-          <button className="adm-btn adm-btn-outline" onClick={() => exportCSV(leads)}>
-            ↓ CSV
-          </button>
-          <button className="adm-btn adm-btn-outline" onClick={() => exportExcel(leads)}>
-            ↓ Excel
-          </button>
+          <button className="adm-btn adm-btn-outline" title="Baixar lista filtrada em CSV (abre no Excel)" onClick={() => exportCSV(leads)}>↓ CSV</button>
+          <button className="adm-btn adm-btn-outline" title="Baixar lista filtrada em planilha Excel" onClick={() => exportExcel(leads)}>↓ Excel</button>
         </div>
       </div>
+      <p className="adm-section-desc">Todos os contatos que preencheram qualquer aba do formulário do site. Use os filtros para segmentar por nome, cidade ou intenção. O telefone é um link direto para o WhatsApp da pessoa.</p>
 
       <div className="adm-filters">
         <input

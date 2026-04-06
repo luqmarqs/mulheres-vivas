@@ -47,9 +47,7 @@ function AdminUsuarios() {
   return (
     <div className="adm-usuarios">
       <h2 className="adm-section-title">Admins</h2>
-      <p className="adm-sub" style={{ marginBottom: 24 }}>
-        Apenas os e-mails listados aqui podem acessar o painel administrativo.
-      </p>
+      <p className="adm-section-desc">Controle de acesso ao painel. Apenas e-mails cadastrados aqui podem entrar — o login é feito com Google. Para adicionar alguém, informe o e-mail da conta Google dela. Não é possível remover o próprio usuário nem o último admin da lista.</p>
 
       {/* ADICIONAR */}
       <div className="adm-chart-card" style={{ marginBottom: 28 }}>

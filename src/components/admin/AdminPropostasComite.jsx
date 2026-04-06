@@ -79,9 +79,7 @@ function AdminPropostasComite() {
   return (
     <div>
       <h2 className="adm-section-title">Propostas de Comitê</h2>
-      <p className="adm-sub" style={{ marginBottom: 20 }}>
-        Pessoas que querem organizar um comitê Mulheres Vivas na sua cidade.
-      </p>
+      <p className="adm-section-desc">Solicitações enviadas por pessoas que querem organizar um comitê na cidade delas. Clique em <strong>Ver / Responder</strong> para avaliar a proposta, mudar o status para <em>aprovado</em> ou <em>recusado</em> e deixar uma observação interna. O contato também fica registrado em Leads.</p>
 
       <div className="adm-filters">
         <input className="adm-input" placeholder="Buscar nome ou cidade…" value={search} onChange={e => setSearch(e.target.value)} />

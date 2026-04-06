@@ -371,10 +371,11 @@ function AdminComites() {
     <div className="adm-comites">
       <div className="adm-section-header">
         <h2 className="adm-section-title">Comitês</h2>
-        <button className="adm-btn adm-btn-primary" onClick={() => setCriando(true)}>
+        <button className="adm-btn adm-btn-primary" title="Criar um novo comitê manualmente" onClick={() => setCriando(true)}>
           + Novo comitê
         </button>
       </div>
+      <p className="adm-section-desc">Grupos de base organizados por cidade. Clique em <strong>Ver →</strong> para abrir o detalhe, adicionar membros e ativar ou desativar o comitê. Comitês criados aqui também aparecem na página pública de comitês do site.</p>
 
       <div className="adm-filters">
         <input

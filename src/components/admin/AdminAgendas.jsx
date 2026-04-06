@@ -195,10 +195,11 @@ function AdminAgendas() {
     <div>
       <div className="adm-section-header">
         <h2 className="adm-section-title">Agendas</h2>
-        <button className="adm-btn adm-btn-primary" onClick={() => setCriando(true)}>
+        <button className="adm-btn adm-btn-primary" title="Criar um novo evento de agenda" onClick={() => setCriando(true)}>
           + Nova agenda
         </button>
       </div>
+      <p className="adm-section-desc">Eventos que aparecem na seção <em>Agenda da Bancada</em> na página inicial — somente os marcados como <strong>Publicado</strong> e com data nos próximos 7 dias ficam visíveis. Clique no badge de status para publicar ou despublicar rapidamente. Use o Google Maps no campo Local para gerar um link direto para o mapa.</p>
 
       <div className="adm-filters">
         <input className="adm-input" placeholder="Buscar pelo título…" value={search} onChange={e => setSearch(e.target.value)} />

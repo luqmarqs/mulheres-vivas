@@ -86,9 +86,7 @@ function AdminPropostasAgenda() {
   return (
     <div>
       <h2 className="adm-section-title">Propostas de Agenda</h2>
-      <p className="adm-sub" style={{ marginBottom: 20 }}>
-        Convites para a Bancada Feminista visitar cidades e eventos.
-      </p>
+      <p className="adm-section-desc">Convites enviados por pessoas que querem receber a Bancada em um evento, escola ou comunidade. Clique em <strong>Ver / Responder</strong> para avaliar, confirmar ou recusar o pedido e registrar uma observação. O contato também fica em Leads.</p>
 
       <div className="adm-filters">
         <input className="adm-input" placeholder="Buscar nome ou cidade…" value={search} onChange={e => setSearch(e.target.value)} />

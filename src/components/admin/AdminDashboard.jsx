@@ -92,6 +92,7 @@ function AdminDashboard() {
   return (
     <div className="adm-dashboard">
       <h2 className="adm-section-title">Dashboard</h2>
+      <p className="adm-section-desc">Visão geral da campanha em tempo real. Use o toggle <strong>7 / 30 dias</strong> no gráfico para mudar o período analisado.</p>
 
       {/* STAT CARDS */}
       <div className="adm-stats-grid adm-stats-grid--6">

@@ -1689,6 +1689,15 @@ form button[type='button'] {
 
 .adm-sub { font-size: 13px; color: var(--text-muted); }
 
+.adm-section-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: -12px;
+  margin-bottom: 20px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+
 .adm-sub-title {
   font-size: 14px;
   font-weight: 700;
