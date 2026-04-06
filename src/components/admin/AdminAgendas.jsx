@@ -28,7 +28,9 @@ function buildGoogleMapsUrl(localNome, localEndereco) {
 }
 
 function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
-  const autocompleteServiceRef = useRef(null)
+  const autocompleteApiRef = useRef(null)
+  const sessionTokenRef = useRef(null)
+  const latestRequestIdRef = useRef(0)
   const fetchTimeoutRef = useRef(null)
   const [mapsDisponivel, setMapsDisponivel] = useState(false)
   const [query, setQuery] = useState(form.local_nome ?? '')
@@ -46,10 +48,11 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
   useEffect(() => {
     if (!MAPS_KEY) return
 
-    importLibrary('places').then(() => {
-      if (autocompleteServiceRef.current) return
+    importLibrary('places').then(({ AutocompleteSuggestion, AutocompleteSessionToken }) => {
+      if (autocompleteApiRef.current) return
 
-      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService()
+      autocompleteApiRef.current = AutocompleteSuggestion
+      sessionTokenRef.current = new AutocompleteSessionToken()
       setMapsDisponivel(true)
     }).catch(() => {})
 
@@ -59,7 +62,7 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
   }, [])
 
   useEffect(() => {
-    if (!mapsDisponivel || !autocompleteServiceRef.current) return
+    if (!mapsDisponivel || !autocompleteApiRef.current) return
 
     const termo = query.trim()
 
@@ -71,29 +74,20 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
     }
 
     fetchTimeoutRef.current = window.setTimeout(() => {
-      autocompleteServiceRef.current.getPlacePredictions(
-        {
-          input: termo,
-          componentRestrictions: { country: 'br' },
-          language: 'pt-BR',
-        },
-        (predictions, status) => {
-          const ok = window.google?.maps?.places?.PlacesServiceStatus?.OK
-          const zero = window.google?.maps?.places?.PlacesServiceStatus?.ZERO_RESULTS
+      const requestId = ++latestRequestIdRef.current
 
-          if (status === ok) {
-            setSugestoes(predictions ?? [])
-            return
-          }
-
-          if (status === zero) {
-            setSugestoes([])
-            return
-          }
-
-          setSugestoes([])
-        }
-      )
+      autocompleteApiRef.current.fetchAutocompleteSuggestions({
+        input: termo,
+        includedRegionCodes: ['br'],
+        language: 'pt-BR',
+        sessionToken: sessionTokenRef.current,
+      }).then(({ suggestions }) => {
+        if (requestId !== latestRequestIdRef.current) return
+        setSugestoes(suggestions ?? [])
+      }).catch(() => {
+        if (requestId !== latestRequestIdRef.current) return
+        setSugestoes([])
+      })
     }, 180)
 
     return () => {
@@ -101,16 +95,22 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
     }
   }, [query, mapsDisponivel])
 
-  function handleSelecionarSugestao(prediction) {
-    const nomeLocal = prediction.structured_formatting?.main_text || prediction.description || ''
-    const endereco = prediction.structured_formatting?.secondary_text || ''
-    const mapsUrl = buildGoogleMapsUrl(nomeLocal, endereco || prediction.description)
+  async function handleSelecionarSugestao(suggestion) {
+    const placePrediction = suggestion.placePrediction
+    if (!placePrediction) return
 
-    setQuery(prediction.description || nomeLocal)
+    const place = placePrediction.toPlace()
+    await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'id'] })
+
+    const nomeLocal = place.displayName || placePrediction.text?.toString() || ''
+    const endereco = place.formattedAddress || ''
+    const mapsUrl = buildGoogleMapsUrl(nomeLocal, endereco)
+
+    setQuery(placePrediction.text?.toString() || nomeLocal)
     setMostrarSugestoes(false)
     setSugestoes([])
 
-    if (localNomeRef.current) localNomeRef.current.value = prediction.description || nomeLocal
+    if (localNomeRef.current) localNomeRef.current.value = nomeLocal
     if (localEnderecoRef.current) localEnderecoRef.current.value = endereco
 
     setForm(f => ({
@@ -118,8 +118,11 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
       local_nome: nomeLocal,
       local_endereco: endereco,
       local_maps_url: mapsUrl,
-      local_place_id: prediction.place_id ?? '',
+      local_place_id: place.id ?? '',
     }))
+
+    const { AutocompleteSessionToken } = await importLibrary('places')
+    sessionTokenRef.current = new AutocompleteSessionToken()
   }
 
   function handleChangeNome(e) {
@@ -168,16 +171,16 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
 
       {mostrarSugestoes && sugestoes.length > 0 && (
         <div className="adm-autocomplete-list">
-          {sugestoes.map(prediction => (
+          {sugestoes.map((suggestion, index) => (
             <button
-              key={prediction.place_id}
+              key={suggestion.placePrediction?.placeId || index}
               type="button"
               className="adm-autocomplete-item"
-              onMouseDown={() => handleSelecionarSugestao(prediction)}
+              onMouseDown={() => void handleSelecionarSugestao(suggestion)}
             >
-              <strong>{prediction.structured_formatting?.main_text || prediction.description}</strong>
-              {prediction.structured_formatting?.secondary_text && (
-                <span>{prediction.structured_formatting.secondary_text}</span>
+              <strong>{suggestion.placePrediction?.mainText?.toString() || suggestion.placePrediction?.text?.toString() || 'Local'}</strong>
+              {suggestion.placePrediction?.secondaryText && (
+                <span>{suggestion.placePrediction.secondaryText.toString()}</span>
               )}
             </button>
           ))}
