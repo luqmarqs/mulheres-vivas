@@ -830,7 +830,8 @@ select:focus {
 
 /* FORM BUTTONS */
 
-form button {
+.form-card form button,
+.form-sucesso button {
   width: 100%;
   padding: 14px;
   border: none;
@@ -843,23 +844,68 @@ form button {
   -webkit-tap-highlight-color: transparent;
 }
 
-form button:hover {
+.form-card form button:hover,
+.form-sucesso button:hover {
   transform: scale(1.02);
 }
 
-form button[type='submit'] {
+.form-card form button[type='submit'],
+.form-sucesso button[type='submit'] {
   background: var(--purple);
   color: #fff;
   box-shadow: 0 0 20px var(--purple-glow);
 }
 
-form button[type='submit']:hover {
+.form-card form button[type='submit']:hover,
+.form-sucesso button[type='submit']:hover {
   box-shadow: 0 0 32px var(--purple-glow);
 }
 
-form button[type='button'] {
+.form-card form button[type='button'],
+.form-sucesso button[type='button'] {
   background: #25d366;
   color: #fff;
+}
+
+.pac-container {
+  margin-top: 6px;
+  border: 1px solid var(--purple) !important;
+  border-radius: 12px !important;
+  background: #1a1228 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35) !important;
+  overflow: hidden;
+  z-index: 9999 !important;
+}
+
+.pac-item {
+  padding: 10px 14px !important;
+  border-top: 1px solid rgba(107, 47, 160, 0.15) !important;
+  background: transparent !important;
+  color: #fff !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.pac-item:first-child {
+  border-top: none !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background: rgba(107, 47, 160, 0.2) !important;
+}
+
+.pac-item-query,
+.pac-matched {
+  color: #fff !important;
+  font-size: 14px !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+
+.pac-item {
+  padding-left: 14px !important;
 }
 
 /* ERRO */
@@ -2335,6 +2381,10 @@ form button[type='button'] {
   color: var(--purple-light);
 }
 
+.agendas-mobile-hint {
+  display: none;
+}
+
 .agendas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -2465,6 +2515,49 @@ form button[type='button'] {
 .agenda-card-action-whatsapp {
   background: #25d366;
   color: #fff;
+}
+
+@media (max-width: 768px) {
+  .agendas-section {
+    padding: 56px 0;
+  }
+
+  .agendas-section .container {
+    gap: 24px;
+    padding-right: 0;
+  }
+
+  .agendas-mobile-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--purple-light);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .agendas-grid {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0 24px 8px;
+    margin: 0 -24px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .agendas-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .agenda-card {
+    flex: 0 0 min(86vw, 340px);
+    scroll-snap-align: start;
+  }
 }
 
 /* ═══════════════════════════════════════════

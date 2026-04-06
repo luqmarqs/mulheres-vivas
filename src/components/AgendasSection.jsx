@@ -147,6 +147,7 @@ function AgendasSection() {
         <div className="content-header">
           <span className="content-tag">Esta semana</span>
           <h2>Agenda <span>da Bancada</span></h2>
+          <p className="agendas-mobile-hint" aria-hidden="true">Deslize para ver mais →</p>
         </div>
 
         <div className="agendas-grid">

@@ -23,25 +23,39 @@ const FORM_VAZIO = {
 
 function LocalInput({ form, setForm }) {
   const inputRef = useRef(null)
+  const autocompleteRef = useRef(null)
   const [mapsDisponivel, setMapsDisponivel] = useState(false)
+  const [query, setQuery] = useState(form.local_nome ?? '')
+
+  useEffect(() => {
+    setQuery(form.local_nome ?? '')
+  }, [form.local_nome])
 
   useEffect(() => {
     if (!MAPS_KEY) return
 
     importLibrary('places').then(({ Autocomplete }) => {
-      setMapsDisponivel(true)
       if (!inputRef.current) return
+
+      setMapsDisponivel(true)
+
+      if (autocompleteRef.current) return
 
       const autocomplete = new Autocomplete(inputRef.current, {
         fields: ['name', 'formatted_address', 'place_id', 'url'],
         componentRestrictions: { country: 'br' },
       })
 
+      autocompleteRef.current = autocomplete
+
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()
+        const nomeLocal = place.name ?? inputRef.current?.value ?? ''
+
+        setQuery(nomeLocal)
         setForm(f => ({
           ...f,
-          local_nome: place.name ?? '',
+          local_nome: nomeLocal,
           local_endereco: place.formatted_address ?? '',
           local_maps_url: place.url ?? '',
           local_place_id: place.place_id ?? '',
@@ -50,22 +64,42 @@ function LocalInput({ form, setForm }) {
     }).catch(() => {})
   }, [setForm])
 
+  function handleChange(e) {
+    const valor = e.target.value
+    setQuery(valor)
+    setForm(f => ({
+      ...f,
+      local_nome: valor,
+      local_maps_url: '',
+      local_place_id: '',
+    }))
+  }
+
+  function handleBlur() {
+    setForm(f => ({
+      ...f,
+      local_nome: query,
+    }))
+  }
+
   return (
     <div className="adm-field">
       <label>Local</label>
       <input
         ref={inputRef}
         className="adm-input"
+        autoComplete="off"
         placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
-        value={form.local_nome}
-        onChange={e => setForm(f => ({ ...f, local_nome: e.target.value, local_maps_url: '', local_place_id: '' }))}
+        value={query}
+        onChange={handleChange}
+        onBlur={handleBlur}
       />
       {form.local_maps_url && (
         <a href={form.local_maps_url} target="_blank" rel="noopener noreferrer" className="adm-link" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
           ✓ {form.local_endereco} — Ver no Maps →
         </a>
       )}
-      {!form.local_maps_url && form.local_nome && (
+      {!form.local_maps_url && query && (
         <input
           className="adm-input"
           style={{ marginTop: 6 }}
