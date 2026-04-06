@@ -2189,6 +2189,7 @@ form button[type='button'] {
     position: sticky;
     top: 0;
     z-index: 50;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
@@ -2203,6 +2204,10 @@ form button[type='button'] {
   /* Nav horizontal com scroll */
   .adm-nav {
     flex: none;
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    background: var(--bg-section);
     flex-direction: row;
     overflow-x: auto;
     padding: 6px 8px;
@@ -2213,6 +2218,8 @@ form button[type='button'] {
   .adm-nav::-webkit-scrollbar { display: none; }
 
   .adm-nav-item {
+    display: inline-flex;
+    align-items: center;
     white-space: nowrap;
     padding: 8px 14px;
     font-size: 13px;
