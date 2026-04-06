@@ -99,7 +99,7 @@ export function useComiteDetalhe(id) {
         .from('membros_comite')
         .select('*')
         .eq('comite_id', id)
-        .order('papel'),
+        .order('created_at', { ascending: true }),
       supabase
         .from('leads')
         .select('id, nome, telefone, email, intencao, created_at')
@@ -124,7 +124,6 @@ export function useComiteDetalhe(id) {
         nome: lead.nome,
         telefone: lead.telefone,
         email: lead.email,
-        papel: 'coordenadora',
         origem_membro: 'lead',
       }))
 
@@ -145,9 +144,13 @@ export function useComiteDetalhe(id) {
     fetch()
   }, [id, fetchMembros])
 
-  async function adicionarMembro({ nome, telefone, email, papel }) {
+  async function adicionarMembro({ nome, telefone, email }) {
     const { error } = await supabase.from('membros_comite').insert({
-      comite_id: id, nome, telefone: normalizePhoneBR(telefone), email: email || null, papel,
+      comite_id: id,
+      nome,
+      telefone: normalizePhoneBR(telefone),
+      email: email || null,
+      papel: 'membro',
     })
     if (error) return error.message
     await fetchMembros()
@@ -159,16 +162,28 @@ export function useComiteDetalhe(id) {
     await fetchMembros()
   }
 
-  async function atualizarMembroPapel(membroId, papel) {
+  async function definirResponsavel({ nome, telefone }) {
+    const telefoneNormalizado = normalizePhoneBR(telefone)
     const { error } = await supabase
-      .from('membros_comite')
-      .update({ papel })
-      .eq('id', membroId)
+      .from('comites')
+      .update({
+        responsavel_nome: nome || null,
+        responsavel_telefone: telefoneNormalizado || null,
+      })
+      .eq('id', id)
 
     if (error) return error.message
+
+    const { data: comiteAtualizado } = await supabase
+      .from('comites')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    setComite(comiteAtualizado)
     await fetchMembros()
     return null
   }
 
-  return { comite, membros, loading, adicionarMembro, removerMembro, atualizarMembroPapel }
+  return { comite, membros, loading, adicionarMembro, removerMembro, definirResponsavel }
 }

@@ -167,13 +167,10 @@ function FormComite({ onSalvar, onCancelar }) {
   )
 }
 
-const PAPEIS = ['coordenadora', 'membro', 'apoiadora', 'comunicação', 'outro']
-
 function AddMembro({ onAdicionar }) {
   const [telefone, setTelefone] = useState('')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
-  const [papel, setPapel] = useState('membro')
   const [buscando, setBuscando] = useState(false)
   const [leadEncontrado, setLeadEncontrado] = useState(null) // null | false | object
   const [saving, setSaving] = useState(false)
@@ -203,10 +200,10 @@ function AddMembro({ onAdicionar }) {
     e.preventDefault()
     if (!nome) { setErro('Nome é obrigatório.'); return }
     setSaving(true)
-    const err = await onAdicionar({ nome, telefone: normalizePhoneBR(telefone), email, papel })
+    const err = await onAdicionar({ nome, telefone: normalizePhoneBR(telefone), email })
     setSaving(false)
     if (err) { setErro(err); return }
-    setTelefone(''); setNome(''); setEmail(''); setPapel('membro')
+    setTelefone(''); setNome(''); setEmail('')
     setLeadEncontrado(null)
   }
 
@@ -237,10 +234,7 @@ function AddMembro({ onAdicionar }) {
             <input className="adm-input" placeholder="Nome *" value={nome} onChange={e => setNome(e.target.value)} required />
             <input className="adm-input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
-          <div className="adm-agenda-row">
-            <select className="adm-input" value={papel} onChange={e => setPapel(e.target.value)}>
-              {PAPEIS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-            </select>
+          <div style={{ marginTop: 8 }}>
             <button className="adm-btn adm-btn-primary adm-btn-sm" type="submit" disabled={saving}>
               {saving ? 'Adicionando…' : '+ Adicionar'}
             </button>
@@ -254,11 +248,11 @@ function AddMembro({ onAdicionar }) {
 }
 
 function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
-  const { comite, membros, loading, adicionarMembro, removerMembro, atualizarMembroPapel } = useComiteDetalhe(id)
+  const { comite, membros, loading, adicionarMembro, removerMembro, definirResponsavel } = useComiteDetalhe(id)
   const [toggling, setToggling] = useState(false)
   const [removendo, setRemovendo] = useState(null)
   const [excluindo, setExcluindo] = useState(false)
-  const [editandoPapelId, setEditandoPapelId] = useState(null)
+  const [definindoResponsavelId, setDefinindoResponsavelId] = useState(null)
 
   function isResponsavel(membro) {
     const telResponsavel = normalizePhoneBR(comite?.responsavel_telefone)
@@ -286,13 +280,13 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
     setRemovendo(null)
   }
 
-  async function handleAtualizarPapel(membroId, papel) {
-    setEditandoPapelId(membroId)
-    const erro = await atualizarMembroPapel(membroId, papel)
-    setEditandoPapelId(null)
+  async function handleDefinirResponsavel(membro) {
+    setDefinindoResponsavelId(membro.id)
+    const erro = await definirResponsavel({ nome: membro.nome, telefone: membro.telefone })
+    setDefinindoResponsavelId(null)
 
     if (erro) {
-      window.alert(`Não foi possível atualizar o papel: ${erro}`)
+      window.alert(`Não foi possível atualizar o responsável: ${erro}`)
     }
   }
 
@@ -362,42 +356,35 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
       {membros.length > 0 && (
         <div className="adm-table-wrap" style={{ marginTop: 12 }}>
           <table className="adm-table">
-            <thead><tr><th>Nome</th><th>Papel</th><th>Telefone</th><th>Email</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th>Telefone</th><th>Email</th><th>Origem</th><th>Responsável</th><th></th></tr></thead>
             <tbody>
               {membros.map(m => (
                 <tr key={m.id} className={isResponsavel(m) ? 'adm-tr-responsavel' : ''}>
                   <td>{m.nome}</td>
-                  <td>
-                    <div className="adm-role-cell">
-                      {m.origem_membro === 'membros_comite' ? (
-                        <select
-                          className="adm-papel-select"
-                          value={m.papel || 'membro'}
-                          onChange={e => handleAtualizarPapel(m.id, e.target.value)}
-                          disabled={editandoPapelId === m.id}
-                        >
-                          {PAPEIS.map(p => (
-                            <option key={p} value={p}>
-                              {p.charAt(0).toUpperCase() + p.slice(1)}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span>
-                      )}
-                      {m.origem_membro === 'lead' && (
-                        <div className="adm-role-meta">
-                          <span className="adm-badge adm-badge--origem">lead</span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
                   <td>
                     {m.telefone
                       ? <a href={toWhatsAppUrl(m.telefone)} target="_blank" rel="noopener noreferrer" className="adm-link">{formatPhoneBR(m.telefone)}</a>
                       : '—'}
                   </td>
                   <td>{m.email ?? '—'}</td>
+                  <td>
+                    <span className="adm-badge adm-badge--origem">
+                      {m.origem_membro === 'lead' ? 'lead' : 'membro'}
+                    </span>
+                  </td>
+                  <td>
+                    {isResponsavel(m)
+                      ? <span className="adm-badge adm-badge--ativo">Atual</span>
+                      : (
+                        <button
+                          className="adm-btn adm-btn-sm adm-btn-outline"
+                          onClick={() => handleDefinirResponsavel(m)}
+                          disabled={definindoResponsavelId === m.id}
+                        >
+                          {definindoResponsavelId === m.id ? 'Definindo…' : 'Definir'}
+                        </button>
+                      )}
+                  </td>
                   <td>
                     {m.origem_membro === 'membros_comite' ? (
                       <button className="adm-btn-danger" onClick={() => handleRemover(m.id)} disabled={removendo === m.id}>
