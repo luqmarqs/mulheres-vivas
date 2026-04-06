@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { normalizePhoneBR } from '../utils/phone'
 
 export function useComites({ search = '', apenasAtivos = true } = {}) {
   const [comites, setComites] = useState([])
@@ -28,16 +29,42 @@ export function useComites({ search = '', apenasAtivos = true } = {}) {
   useEffect(() => { fetchComites() }, [fetchComites])
 
   async function criar(form) {
-    const { error } = await supabase.from('comites').insert({
+    const responsavelTelefone = normalizePhoneBR(form.responsavel_telefone)
+    const telefoneValido = responsavelTelefone.length === 10 || responsavelTelefone.length === 11
+
+    const { data: comite, error } = await supabase.from('comites').insert({
       nome: form.nome,
       cidade: form.cidade || null,
       estado: form.estado || null,
       responsavel_nome: form.responsavel_nome || null,
-      responsavel_telefone: form.responsavel_telefone || null,
+      responsavel_telefone: responsavelTelefone || null,
       whatsapp_link: form.whatsapp_link || null,
       ativo: form.ativo ?? true,
-    })
+    }).select('id').single()
     if (error) return error.message
+
+    if (telefoneValido) {
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('nome, email, telefone')
+        .eq('telefone', responsavelTelefone)
+        .maybeSingle()
+
+      const nomeMembro = lead?.nome || form.responsavel_nome || null
+
+      if (nomeMembro) {
+        const { error: membroError } = await supabase.from('membros_comite').insert({
+          comite_id: comite.id,
+          nome: nomeMembro,
+          telefone: responsavelTelefone,
+          email: lead?.email || null,
+          papel: 'coordenadora',
+        })
+
+        if (membroError) return membroError.message
+      }
+    }
+
     fetchComites()
     return null
   }
@@ -51,12 +78,41 @@ export function useComiteDetalhe(id) {
   const [loading, setLoading] = useState(true)
 
   const fetchMembros = useCallback(async () => {
-    const { data } = await supabase
-      .from('membros_comite')
-      .select('*')
-      .eq('comite_id', id)
-      .order('papel')
-    setMembros(data ?? [])
+    const [{ data: membrosData }, { data: leadsData }] = await Promise.all([
+      supabase
+        .from('membros_comite')
+        .select('*')
+        .eq('comite_id', id)
+        .order('papel'),
+      supabase
+        .from('leads')
+        .select('id, nome, telefone, email, intencao, created_at')
+        .eq('comite_id', id)
+        .eq('intencao', 'organizar')
+        .order('created_at', { ascending: true }),
+    ])
+
+    const membrosPersistidos = (membrosData ?? []).map((membro) => ({
+      ...membro,
+      origem_membro: 'membros_comite',
+    }))
+
+    const chavesExistentes = new Set(
+      membrosPersistidos.map((membro) => `${membro.telefone || ''}|${(membro.email || '').toLowerCase()}`)
+    )
+
+    const membrosDerivados = (leadsData ?? [])
+      .filter((lead) => !chavesExistentes.has(`${lead.telefone || ''}|${(lead.email || '').toLowerCase()}`))
+      .map((lead) => ({
+        id: `lead-${lead.id}`,
+        nome: lead.nome,
+        telefone: lead.telefone,
+        email: lead.email,
+        papel: 'coordenadora',
+        origem_membro: 'lead',
+      }))
+
+    setMembros([...membrosPersistidos, ...membrosDerivados])
   }, [id])
 
   useEffect(() => {
@@ -75,7 +131,7 @@ export function useComiteDetalhe(id) {
 
   async function adicionarMembro({ nome, telefone, email, papel }) {
     const { error } = await supabase.from('membros_comite').insert({
-      comite_id: id, nome, telefone, email: email || null, papel,
+      comite_id: id, nome, telefone: normalizePhoneBR(telefone), email: email || null, papel,
     })
     if (error) return error.message
     await fetchMembros()

@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { normalizePhoneBR } from '../utils/phone'
 
 async function upsertLead(form, intencao) {
-  const telefone = form.telefone.replace(/\D/g, '')
+  const telefone = normalizePhoneBR(form.telefone)
 
   // Busca comitê da cidade para associar
   let comite_id = null
@@ -43,10 +44,12 @@ async function upsertLead(form, intencao) {
 // ---- Inserções públicas ----
 
 export async function insertPropostaComite(form) {
+  const telefone = normalizePhoneBR(form.telefone)
+
   const [{ error }] = await Promise.all([
     supabase.from('propostas_comite').insert({
       nome: form.nome,
-      telefone: form.telefone.replace(/\D/g, ''),
+      telefone,
       email: form.email || null,
       cidade: form.cidade || null,
       uf: form.uf || null,
@@ -59,10 +62,12 @@ export async function insertPropostaComite(form) {
 }
 
 export async function insertPropostaAgenda(form) {
+  const telefone = normalizePhoneBR(form.telefone)
+
   const [{ error }] = await Promise.all([
     supabase.from('propostas_agenda').insert({
       nome: form.nome,
-      telefone: form.telefone.replace(/\D/g, ''),
+      telefone,
       email: form.email || null,
       cidade: form.cidade || null,
       uf: form.uf || null,

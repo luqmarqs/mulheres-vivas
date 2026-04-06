@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { normalizePhoneBR } from '../utils/phone'
 
 export function useLeads({ search = '', cidade = '', comiteId = '', intencao = '' } = {}) {
   const [leads, setLeads] = useState([])
@@ -35,6 +36,8 @@ export function useLeads({ search = '', cidade = '', comiteId = '', intencao = '
 }
 
 export async function insertLead(lead) {
+  const telefone = normalizePhoneBR(lead.telefone)
+
   // Associar comitê automaticamente pela cidade
   let comite_id = null
   if (lead.cidade) {
@@ -52,14 +55,14 @@ export async function insertLead(lead) {
   const { data: existente } = await supabase
     .from('leads')
     .select('id')
-    .eq('telefone', lead.telefone.replace(/\D/g, ''))
+    .eq('telefone', telefone)
     .maybeSingle()
 
   if (existente) return { error: 'Telefone já cadastrado.' }
 
   const { error } = await supabase.from('leads').insert({
     ...lead,
-    telefone: lead.telefone.replace(/\D/g, ''),
+    telefone,
     comite_id,
     origem: lead.origem ?? 'form_abaixo_assinado',
   })
@@ -68,6 +71,8 @@ export async function insertLead(lead) {
 }
 
 export async function insertComiteELead(form) {
+  const telefone = normalizePhoneBR(form.telefone)
+
   // Criar comitê
   const { data: comite, error: errComite } = await supabase
     .from('comites')
@@ -76,7 +81,7 @@ export async function insertComiteELead(form) {
       cidade: form.cidade,
       estado: form.uf,
       responsavel_nome: form.nome,
-      responsavel_telefone: form.telefone.replace(/\D/g, ''),
+      responsavel_telefone: telefone,
       whatsapp_link: form.whatsapp_link ?? null,
       ativo: true,
     })
@@ -88,16 +93,16 @@ export async function insertComiteELead(form) {
   // Inserir coordenador em membros_comite
   await supabase.from('membros_comite').insert({
     nome: form.nome,
-    telefone: form.telefone.replace(/\D/g, ''),
+    telefone,
     email: form.email,
     comite_id: comite.id,
-    papel: 'coordenador',
+    papel: 'coordenadora',
   })
 
   // Inserir lead
   const { error: errLead } = await supabase.from('leads').insert({
     nome: form.nome,
-    telefone: form.telefone.replace(/\D/g, ''),
+    telefone,
     email: form.email,
     cidade: form.cidade,
     uf: form.uf,

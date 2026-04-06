@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useComites, useComiteDetalhe } from '../../hooks/useComites'
 import { useCidades } from '../../hooks/useCidades'
 import { supabase } from '../../lib/supabase'
+import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR, toWhatsAppUrl } from '../../utils/phone'
 
 const UFS = [
   'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT',
@@ -72,6 +73,10 @@ function FormComite({ onSalvar, onCancelar }) {
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
+  function handleTelefoneResponsavel(e) {
+    setForm(f => ({ ...f, responsavel_telefone: formatPhoneBR(e.target.value) }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.nome) { setErro('Nome é obrigatório.'); return }
@@ -134,7 +139,7 @@ function FormComite({ onSalvar, onCancelar }) {
 
         <div className="adm-field">
           <label>Telefone do responsável</label>
-          <input className="adm-input" value={form.responsavel_telefone} onChange={set('responsavel_telefone')} placeholder="(11) 99999-9999" />
+          <input className="adm-input" value={form.responsavel_telefone} onChange={handleTelefoneResponsavel} placeholder="(11) 99999-9999" />
         </div>
 
         <div className="adm-field">
@@ -174,25 +179,15 @@ function AddMembro({ onAdicionar }) {
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
 
-  const normalizar = (t) => t.replace(/\D/g, '')
-
-  const formatPhone = (v) => {
-    v = normalizar(v).slice(0, 11)
-    if (v.length <= 2) return v
-    if (v.length <= 6) return `(${v.slice(0,2)}) ${v.slice(2)}`
-    if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`
-    return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`
-  }
-
   async function buscarLead() {
-    const num = normalizar(telefone)
-    if (num.length < 10) { setErro('Telefone inválido.'); return }
+    const num = normalizePhoneBR(telefone)
+    if (!isValidPhoneBR(num)) { setErro('Telefone inválido.'); return }
     setErro('')
     setBuscando(true)
     const { data } = await supabase
       .from('leads')
       .select('nome, email, telefone')
-      .eq('telefone', formatPhone(num))
+      .eq('telefone', num)
       .maybeSingle()
     setBuscando(false)
     if (data) {
@@ -208,7 +203,7 @@ function AddMembro({ onAdicionar }) {
     e.preventDefault()
     if (!nome) { setErro('Nome é obrigatório.'); return }
     setSaving(true)
-    const err = await onAdicionar({ nome, telefone: normalizar(telefone), email, papel })
+    const err = await onAdicionar({ nome, telefone: normalizePhoneBR(telefone), email, papel })
     setSaving(false)
     if (err) { setErro(err); return }
     setTelefone(''); setNome(''); setEmail(''); setPapel('membro')
@@ -222,7 +217,7 @@ function AddMembro({ onAdicionar }) {
           className="adm-input"
           placeholder="Telefone (com DDD)"
           value={telefone}
-          onChange={e => { setTelefone(formatPhone(e.target.value)); setLeadEncontrado(null); setNome(''); setEmail('') }}
+          onChange={e => { setTelefone(formatPhoneBR(e.target.value)); setLeadEncontrado(null); setNome(''); setEmail('') }}
         />
         <button type="button" className="adm-btn adm-btn-outline adm-btn-sm" onClick={buscarLead} disabled={buscando}>
           {buscando ? '…' : 'Buscar'}
@@ -324,17 +319,26 @@ function ComiteDetalhe({ id, onBack, onRefetch }) {
               {membros.map(m => (
                 <tr key={m.id}>
                   <td>{m.nome}</td>
-                  <td><span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span></td>
+                  <td>
+                    <span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span>
+                    {m.origem_membro === 'lead' && (
+                      <span className="adm-badge adm-badge--origem" style={{ marginLeft: 6 }}>lead</span>
+                    )}
+                  </td>
                   <td>
                     {m.telefone
-                      ? <a href={`https://wa.me/55${m.telefone}`} target="_blank" rel="noopener noreferrer" className="adm-link">{m.telefone}</a>
+                      ? <a href={toWhatsAppUrl(m.telefone)} target="_blank" rel="noopener noreferrer" className="adm-link">{formatPhoneBR(m.telefone)}</a>
                       : '—'}
                   </td>
                   <td>{m.email ?? '—'}</td>
                   <td>
-                    <button className="adm-btn-danger" onClick={() => handleRemover(m.id)} disabled={removendo === m.id}>
-                      {removendo === m.id ? '…' : '×'}
-                    </button>
+                    {m.origem_membro === 'membros_comite' ? (
+                      <button className="adm-btn-danger" onClick={() => handleRemover(m.id)} disabled={removendo === m.id}>
+                        {removendo === m.id ? '…' : '×'}
+                      </button>
+                    ) : (
+                      <span style={{ color: '#6b5a80', fontSize: 12 }}>—</span>
+                    )}
                   </td>
                 </tr>
               ))}

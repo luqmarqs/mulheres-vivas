@@ -3,6 +3,7 @@ import { useCidades } from '../hooks/useCidades'
 import { insertLead } from '../hooks/useLeads'
 import { insertPropostaComite, insertPropostaAgenda } from '../hooks/usePropostas'
 import { supabaseConfigurado } from '../lib/supabase'
+import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR } from '../utils/phone'
 
 const TABS = [
   { id: 'assinar',  label: '✊ Abaixo-assinado' },
@@ -17,14 +18,6 @@ const EMPTY_FORM = {
 }
 
 function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, setEmailErro, ufs, cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeSelecionada, cidadeRef, mostrarSugestoes, setMostrarSugestoes }) {
-  const formatPhone = (value) => {
-    value = value.replace(/\D/g, '').slice(0, 11)
-    if (value.length <= 2) return value
-    if (value.length <= 6) return `(${value.slice(0, 2)}) ${value.slice(2)}`
-    if (value.length <= 10) return `(${value.slice(0, 2)}) ${value.slice(2, 6)}-${value.slice(6)}`
-    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`
-  }
-
   const validarEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
 
   const [openUF, setOpenUF] = useState(false)
@@ -42,10 +35,9 @@ function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, s
         placeholder="WhatsApp (com DDD)"
         value={form.telefone}
         onChange={e => {
-          const masked = formatPhone(e.target.value)
+          const masked = formatPhoneBR(e.target.value)
           setForm({ ...form, telefone: masked })
-          const n = masked.replace(/\D/g, '')
-          setTelefoneErro(n.length === 10 || n.length === 11 ? '' : 'Telefone inválido')
+          setTelefoneErro(isValidPhoneBR(masked) ? '' : 'Telefone inválido')
         }}
         required
       />
@@ -160,7 +152,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
     setSucesso(false)
   }
 
-  const validarTelefone = (t) => { const n = t.replace(/\D/g, ''); return n.length === 10 || n.length === 11 }
+  const validarTelefone = (t) => isValidPhoneBR(t)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -180,7 +172,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
     } else {
       result = await insertLead({
         nome: form.nome,
-        telefone: form.telefone,
+        telefone: normalizePhoneBR(form.telefone),
         email: form.email || null,
         cidade: form.cidade || null,
         uf: form.uf || null,

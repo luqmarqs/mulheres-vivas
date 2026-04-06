@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import { useLeads } from '../../hooks/useLeads'
+import { formatPhoneBR, toWhatsAppUrl } from '../../utils/phone'
 
 function useDebounce(fn, delay) {
   let timer
@@ -13,7 +14,7 @@ function useDebounce(fn, delay) {
 function buildRows(leads) {
   return leads.map(l => ({
     Nome: l.nome,
-    Telefone: l.telefone,
+    Telefone: formatPhoneBR(l.telefone),
     Email: l.email ?? '',
     Cidade: l.cidade ?? '',
     UF: l.uf ?? '',
@@ -122,8 +123,8 @@ function AdminLeads() {
                 <tr key={l.id}>
                   <td>{l.nome}</td>
                   <td>
-                    <a href={`https://wa.me/55${l.telefone}`} target="_blank" rel="noopener noreferrer" className="adm-link">
-                      {l.telefone}
+                    <a href={toWhatsAppUrl(l.telefone)} target="_blank" rel="noopener noreferrer" className="adm-link">
+                      {formatPhoneBR(l.telefone)}
                     </a>
                   </td>
                   <td>{l.email ?? '—'}</td>
