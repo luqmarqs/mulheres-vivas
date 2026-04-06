@@ -21,6 +21,9 @@ const TABS = [
 function Admin() {
   const { user, logout } = useAuth()
   const [tab, setTab] = useState('dashboard')
+  const avatarUrl = user?.user_metadata?.avatar_url
+  const nomeUsuario = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'Usuaria'
+  const inicialUsuario = (nomeUsuario || 'U').trim().charAt(0).toUpperCase()
 
   return (
     <div className="adm-root">
@@ -28,6 +31,13 @@ function Admin() {
         <div className="adm-sidebar-logo">
           <img src="/logo.png" alt="Bancada Feminista" />
           <span>Admin</span>
+          <div className="adm-sidebar-user" aria-label={`Sessao ativa de ${nomeUsuario}`}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={nomeUsuario} className="adm-user-avatar" />
+            ) : (
+              <div className="adm-user-avatar adm-user-avatar-fallback">{inicialUsuario}</div>
+            )}
+          </div>
           <button className="adm-btn adm-btn-outline adm-btn-sm adm-logout-mobile" onClick={logout}>
             Sair
           </button>
@@ -54,6 +64,19 @@ function Admin() {
       </aside>
 
       <main className="adm-main">
+        <div className="adm-user-chip" aria-label={`Sessao ativa de ${nomeUsuario}`}>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={nomeUsuario} className="adm-user-avatar" />
+          ) : (
+            <div className="adm-user-avatar adm-user-avatar-fallback">{inicialUsuario}</div>
+          )}
+
+          <div className="adm-user-chip-meta">
+            <strong>{nomeUsuario}</strong>
+            <span>{user?.email}</span>
+          </div>
+        </div>
+
         {tab === 'dashboard' && <AdminDashboard />}
         {tab === 'leads' && <AdminLeads />}
         {tab === 'comites' && <AdminComites />}
