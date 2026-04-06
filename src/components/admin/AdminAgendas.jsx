@@ -301,6 +301,7 @@ function AdminAgendas() {
   const [criando, setCriando] = useState(false)
   const [editando, setEditando] = useState(null)
   const [removendo, setRemovendo] = useState(null)
+  const [publicando, setPublicando] = useState(null)
 
   const { agendas, loading, error, togglePublicado, remover, salvar } = useAgendasAdmin({ search })
 
@@ -309,6 +310,12 @@ function AdminAgendas() {
     setRemovendo(agenda.id)
     await remover(agenda.id, agenda.imagem_url)
     setRemovendo(null)
+  }
+
+  async function handleTogglePublicado(agenda) {
+    setPublicando(agenda.id)
+    await togglePublicado(agenda.id, agenda.publicado)
+    setPublicando(null)
   }
 
   function formatarData(dataStr) {
@@ -368,7 +375,7 @@ function AdminAgendas() {
                 <th>Hora</th>
                 <th>Local</th>
                 <th>Status</th>
-                <th></th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -388,20 +395,26 @@ function AdminAgendas() {
                       : (a.local_nome ?? '—')}
                   </td>
                   <td>
-                    <button
-                      className={`adm-badge adm-badge--${a.publicado ? 'ativo' : 'inativo'}`}
-                      style={{ border: 'none', cursor: 'pointer', background: 'inherit' }}
-                      onClick={() => togglePublicado(a.id, a.publicado)}
-                      title="Clique para alternar"
-                    >
+                    <span className={`adm-badge adm-badge--${a.publicado ? 'ativo' : 'inativo'}`}>
                       {a.publicado ? 'Publicado' : 'Rascunho'}
-                    </button>
+                    </span>
                   </td>
-                  <td style={{ display: 'flex', gap: 6 }}>
-                    <button className="adm-btn adm-btn-sm adm-btn-outline" onClick={() => setEditando(a)}>Editar</button>
+                  <td>
+                    <div className="adm-actions-cell">
+                      <button className="adm-btn adm-btn-sm adm-btn-outline" onClick={() => setEditando(a)}>
+                        Editar
+                      </button>
+                      <button
+                        className={`adm-btn adm-btn-sm ${a.publicado ? 'adm-btn-outline' : 'adm-btn-primary'}`}
+                        onClick={() => handleTogglePublicado(a)}
+                        disabled={publicando === a.id}
+                      >
+                        {publicando === a.id ? 'Salvando…' : a.publicado ? 'Despublicar' : 'Publicar'}
+                      </button>
                     <button className="adm-btn-danger" onClick={() => handleRemover(a)} disabled={removendo === a.id}>
                       {removendo === a.id ? '…' : '×'}
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}

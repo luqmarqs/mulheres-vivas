@@ -2201,6 +2201,13 @@ select:focus {
 .adm-link    { color: var(--purple-light); text-decoration: none; }
 .adm-link:hover { text-decoration: underline; }
 
+.adm-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 /* DETALHE COMITÊ */
 .adm-comite-header {
   display: flex;
