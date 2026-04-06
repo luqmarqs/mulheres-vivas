@@ -158,34 +158,36 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
   return (
     <div className="adm-field adm-local-field">
       <label>Local</label>
-      <input
-        ref={localNomeRef}
-        className="adm-input"
-        autoComplete="off"
-        defaultValue={form.local_nome ?? ''}
-        placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
-        onChange={handleChangeNome}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-      />
+      <div className="adm-autocomplete-anchor">
+        <input
+          ref={localNomeRef}
+          className="adm-input"
+          autoComplete="off"
+          defaultValue={form.local_nome ?? ''}
+          placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
+          onChange={handleChangeNome}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+        />
 
-      {mostrarSugestoes && sugestoes.length > 0 && (
-        <div className="adm-autocomplete-list">
-          {sugestoes.map((suggestion, index) => (
-            <button
-              key={suggestion.placePrediction?.placeId || index}
-              type="button"
-              className="adm-autocomplete-item"
-              onMouseDown={() => void handleSelecionarSugestao(suggestion)}
-            >
-              <strong>{suggestion.placePrediction?.mainText?.toString() || suggestion.placePrediction?.text?.toString() || 'Local'}</strong>
-              {suggestion.placePrediction?.secondaryText && (
-                <span>{suggestion.placePrediction.secondaryText.toString()}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+        {mostrarSugestoes && sugestoes.length > 0 && (
+          <div className="adm-autocomplete-list">
+            {sugestoes.map((suggestion, index) => (
+              <button
+                key={suggestion.placePrediction?.placeId || index}
+                type="button"
+                className="adm-autocomplete-item"
+                onMouseDown={() => void handleSelecionarSugestao(suggestion)}
+              >
+                <strong>{suggestion.placePrediction?.mainText?.toString() || suggestion.placePrediction?.text?.toString() || 'Local'}</strong>
+                {suggestion.placePrediction?.secondaryText && (
+                  <span>{suggestion.placePrediction.secondaryText.toString()}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <input
         ref={localEnderecoRef}

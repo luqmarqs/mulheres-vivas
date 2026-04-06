@@ -2244,9 +2244,13 @@ select:focus {
   position: relative;
 }
 
+.adm-autocomplete-anchor {
+  position: relative;
+}
+
 .adm-autocomplete-list {
   position: absolute;
-  top: calc(100% + 2px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 30;
