@@ -1,6 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
+function buildGoogleMapsUrl(localNome, localEndereco) {
+  const query = [localNome, localEndereco].filter(Boolean).join(', ').trim()
+  if (!query) return null
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
 export function useAgendasSemana() {
   const [agendas, setAgendas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -73,6 +79,7 @@ export function useAgendasAdmin({ search = '' } = {}) {
 
   async function salvar(form, imagemFile, editandoId = null) {
     let imagem_url = form.imagem_url ?? null
+    const local_maps_url = form.local_maps_url || buildGoogleMapsUrl(form.local_nome, form.local_endereco)
 
     if (imagemFile) {
       const ext = imagemFile.name.split('.').pop()
@@ -93,7 +100,7 @@ export function useAgendasAdmin({ search = '' } = {}) {
       hora: form.hora || null,
       local_nome: form.local_nome || null,
       local_endereco: form.local_endereco || null,
-      local_maps_url: form.local_maps_url || null,
+      local_maps_url,
       local_place_id: form.local_place_id || null,
       descricao: form.descricao || null,
       imagem_url,

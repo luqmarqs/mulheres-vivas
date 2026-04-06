@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAgendasAdmin } from '../../hooks/useAgendas'
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
+import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? ''
 
@@ -21,92 +21,107 @@ const FORM_VAZIO = {
   publicado: false,
 }
 
-function LocalInput({ form, setForm }) {
-  const inputRef = useRef(null)
+function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
   const autocompleteRef = useRef(null)
   const [mapsDisponivel, setMapsDisponivel] = useState(false)
-  const [query, setQuery] = useState(form.local_nome ?? '')
 
   useEffect(() => {
-    setQuery(form.local_nome ?? '')
-  }, [form.local_nome])
+    if (!localNomeRef.current || !localEnderecoRef.current) return
+
+    localNomeRef.current.value = form.local_nome ?? ''
+    localEnderecoRef.current.value = form.local_endereco ?? ''
+  }, [form.local_nome, form.local_endereco, localNomeRef, localEnderecoRef])
 
   useEffect(() => {
-    if (!MAPS_KEY) return
+    if (!MAPS_KEY || !localNomeRef.current) return
+
+    let placeChangedListener = null
 
     importLibrary('places').then(({ Autocomplete }) => {
-      if (!inputRef.current) return
+      if (!localNomeRef.current || autocompleteRef.current) return
 
-      setMapsDisponivel(true)
-
-      if (autocompleteRef.current) return
-
-      const autocomplete = new Autocomplete(inputRef.current, {
+      const autocomplete = new Autocomplete(localNomeRef.current, {
         fields: ['name', 'formatted_address', 'place_id', 'url'],
         componentRestrictions: { country: 'br' },
       })
 
       autocompleteRef.current = autocomplete
+      setMapsDisponivel(true)
 
-      autocomplete.addListener('place_changed', () => {
+      placeChangedListener = autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()
-        const nomeLocal = place.name ?? inputRef.current?.value ?? ''
+        const nomeLocal = place.name ?? localNomeRef.current?.value ?? ''
+        const endereco = place.formatted_address ?? localEnderecoRef.current?.value ?? ''
 
-        setQuery(nomeLocal)
+        if (localNomeRef.current) localNomeRef.current.value = nomeLocal
+        if (localEnderecoRef.current) localEnderecoRef.current.value = endereco
+
         setForm(f => ({
           ...f,
           local_nome: nomeLocal,
-          local_endereco: place.formatted_address ?? '',
+          local_endereco: endereco,
           local_maps_url: place.url ?? '',
           local_place_id: place.place_id ?? '',
         }))
       })
     }).catch(() => {})
-  }, [setForm])
 
-  function handleChange(e) {
-    const valor = e.target.value
-    setQuery(valor)
-    setForm(f => ({
-      ...f,
-      local_nome: valor,
-      local_maps_url: '',
-      local_place_id: '',
-    }))
-  }
+    return () => {
+      if (placeChangedListener) placeChangedListener.remove()
+      autocompleteRef.current = null
+    }
+  }, [setForm, localNomeRef, localEnderecoRef])
 
-  function handleBlur() {
-    setForm(f => ({
-      ...f,
-      local_nome: query,
-    }))
-  }
+  useEffect(() => {
+    if (!localNomeRef.current || !localEnderecoRef.current) return
+
+    const handleManualEdit = () => {
+      setForm(f => {
+        if (!f.local_maps_url && !f.local_place_id) return f
+        return {
+          ...f,
+          local_maps_url: '',
+          local_place_id: '',
+        }
+      })
+    }
+
+    const nomeInput = localNomeRef.current
+    const enderecoInput = localEnderecoRef.current
+
+    nomeInput.addEventListener('input', handleManualEdit)
+    enderecoInput.addEventListener('input', handleManualEdit)
+
+    return () => {
+      nomeInput.removeEventListener('input', handleManualEdit)
+      enderecoInput.removeEventListener('input', handleManualEdit)
+    }
+  }, [setForm, localNomeRef, localEnderecoRef])
 
   return (
     <div className="adm-field">
       <label>Local</label>
       <input
-        ref={inputRef}
+        ref={localNomeRef}
         className="adm-input"
         autoComplete="off"
+        defaultValue={form.local_nome ?? ''}
         placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
-        value={query}
-        onChange={handleChange}
-        onBlur={handleBlur}
       />
+      <input
+        ref={localEnderecoRef}
+        className="adm-input"
+        style={{ marginTop: 6 }}
+        placeholder="Endereço (opcional)"
+        defaultValue={form.local_endereco ?? ''}
+      />
+      <p className="adm-sub" style={{ marginTop: 4 }}>
+        {mapsDisponivel ? 'Selecione uma sugestão do Google Maps ou edite manualmente.' : 'O link do Google Maps sera gerado automaticamente ao salvar.'}
+      </p>
       {form.local_maps_url && (
         <a href={form.local_maps_url} target="_blank" rel="noopener noreferrer" className="adm-link" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
-          ✓ {form.local_endereco} — Ver no Maps →
+          ✓ Ver no Maps →
         </a>
-      )}
-      {!form.local_maps_url && query && (
-        <input
-          className="adm-input"
-          style={{ marginTop: 6 }}
-          placeholder="Endereço (opcional)"
-          value={form.local_endereco}
-          onChange={e => setForm(f => ({ ...f, local_endereco: e.target.value }))}
-        />
       )}
     </div>
   )
@@ -118,6 +133,8 @@ function FormAgenda({ inicial, onSalvar, onCancelar }) {
   const [preview, setPreview] = useState(inicial?.imagem_url ?? null)
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
+  const localNomeRef = useRef(null)
+  const localEnderecoRef = useRef(null)
 
   function handleImagem(e) {
     const file = e.target.files[0]
@@ -129,8 +146,15 @@ function FormAgenda({ inicial, onSalvar, onCancelar }) {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.titulo || !form.data) { setErro('Título e data são obrigatórios.'); return }
+
+    const formFinal = {
+      ...form,
+      local_nome: localNomeRef.current?.value?.trim() ?? form.local_nome,
+      local_endereco: localEnderecoRef.current?.value?.trim() ?? form.local_endereco,
+    }
+
     setSaving(true)
-    const err = await onSalvar(form, imagemFile, inicial?.id ?? null)
+    const err = await onSalvar(formFinal, imagemFile, inicial?.id ?? null)
     setSaving(false)
     if (err) setErro(err)
     else onCancelar()
@@ -157,7 +181,7 @@ function FormAgenda({ inicial, onSalvar, onCancelar }) {
           </div>
         </div>
 
-        <LocalInput form={form} setForm={setForm} />
+        <LocalInput form={form} setForm={setForm} localNomeRef={localNomeRef} localEnderecoRef={localEnderecoRef} />
 
         <div className="adm-field">
           <label>Descrição</label>
@@ -243,7 +267,7 @@ function AdminAgendas() {
 
       {!MAPS_KEY && (
         <p className="adm-error" style={{ marginBottom: 12 }}>
-          ⚠️ VITE_GOOGLE_MAPS_KEY não configurado — busca de local desativada.
+          ⚠️ VITE_GOOGLE_MAPS_KEY não configurado — autocomplete de local desativado.
         </p>
       )}
 
