@@ -21,85 +21,139 @@ const FORM_VAZIO = {
   publicado: false,
 }
 
+function buildGoogleMapsUrl(localNome, localEndereco) {
+  const query = [localNome, localEndereco].filter(Boolean).join(', ').trim()
+  if (!query) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
 function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
-  const autocompleteRef = useRef(null)
+  const autocompleteServiceRef = useRef(null)
+  const fetchTimeoutRef = useRef(null)
   const [mapsDisponivel, setMapsDisponivel] = useState(false)
+  const [query, setQuery] = useState(form.local_nome ?? '')
+  const [sugestoes, setSugestoes] = useState([])
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
 
   useEffect(() => {
     if (!localNomeRef.current || !localEnderecoRef.current) return
 
     localNomeRef.current.value = form.local_nome ?? ''
     localEnderecoRef.current.value = form.local_endereco ?? ''
+    setQuery(form.local_nome ?? '')
   }, [form.local_nome, form.local_endereco, localNomeRef, localEnderecoRef])
 
   useEffect(() => {
-    if (!MAPS_KEY || !localNomeRef.current) return
+    if (!MAPS_KEY) return
 
-    let placeChangedListener = null
+    importLibrary('places').then(() => {
+      if (autocompleteServiceRef.current) return
 
-    importLibrary('places').then(({ Autocomplete }) => {
-      if (!localNomeRef.current || autocompleteRef.current) return
-
-      const autocomplete = new Autocomplete(localNomeRef.current, {
-        fields: ['name', 'formatted_address', 'place_id', 'url'],
-        componentRestrictions: { country: 'br' },
-      })
-
-      autocompleteRef.current = autocomplete
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService()
       setMapsDisponivel(true)
-
-      placeChangedListener = autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace()
-        const nomeLocal = place.name ?? localNomeRef.current?.value ?? ''
-        const endereco = place.formatted_address ?? localEnderecoRef.current?.value ?? ''
-
-        if (localNomeRef.current) localNomeRef.current.value = nomeLocal
-        if (localEnderecoRef.current) localEnderecoRef.current.value = endereco
-
-        setForm(f => ({
-          ...f,
-          local_nome: nomeLocal,
-          local_endereco: endereco,
-          local_maps_url: place.url ?? '',
-          local_place_id: place.place_id ?? '',
-        }))
-      })
     }).catch(() => {})
 
     return () => {
-      if (placeChangedListener) placeChangedListener.remove()
-      autocompleteRef.current = null
+      if (fetchTimeoutRef.current) window.clearTimeout(fetchTimeoutRef.current)
     }
-  }, [setForm, localNomeRef, localEnderecoRef])
+  }, [])
 
   useEffect(() => {
-    if (!localNomeRef.current || !localEnderecoRef.current) return
+    if (!mapsDisponivel || !autocompleteServiceRef.current) return
 
-    const handleManualEdit = () => {
-      setForm(f => {
-        if (!f.local_maps_url && !f.local_place_id) return f
-        return {
-          ...f,
-          local_maps_url: '',
-          local_place_id: '',
-        }
-      })
+    const termo = query.trim()
+
+    if (fetchTimeoutRef.current) window.clearTimeout(fetchTimeoutRef.current)
+
+    if (termo.length < 2) {
+      setSugestoes([])
+      return
     }
 
-    const nomeInput = localNomeRef.current
-    const enderecoInput = localEnderecoRef.current
+    fetchTimeoutRef.current = window.setTimeout(() => {
+      autocompleteServiceRef.current.getPlacePredictions(
+        {
+          input: termo,
+          componentRestrictions: { country: 'br' },
+          language: 'pt-BR',
+        },
+        (predictions, status) => {
+          const ok = window.google?.maps?.places?.PlacesServiceStatus?.OK
+          const zero = window.google?.maps?.places?.PlacesServiceStatus?.ZERO_RESULTS
 
-    nomeInput.addEventListener('input', handleManualEdit)
-    enderecoInput.addEventListener('input', handleManualEdit)
+          if (status === ok) {
+            setSugestoes(predictions ?? [])
+            return
+          }
+
+          if (status === zero) {
+            setSugestoes([])
+            return
+          }
+
+          setSugestoes([])
+        }
+      )
+    }, 180)
 
     return () => {
-      nomeInput.removeEventListener('input', handleManualEdit)
-      enderecoInput.removeEventListener('input', handleManualEdit)
+      if (fetchTimeoutRef.current) window.clearTimeout(fetchTimeoutRef.current)
     }
-  }, [setForm, localNomeRef, localEnderecoRef])
+  }, [query, mapsDisponivel])
+
+  function handleSelecionarSugestao(prediction) {
+    const nomeLocal = prediction.structured_formatting?.main_text || prediction.description || ''
+    const endereco = prediction.structured_formatting?.secondary_text || ''
+    const mapsUrl = buildGoogleMapsUrl(nomeLocal, endereco || prediction.description)
+
+    setQuery(prediction.description || nomeLocal)
+    setMostrarSugestoes(false)
+    setSugestoes([])
+
+    if (localNomeRef.current) localNomeRef.current.value = prediction.description || nomeLocal
+    if (localEnderecoRef.current) localEnderecoRef.current.value = endereco
+
+    setForm(f => ({
+      ...f,
+      local_nome: nomeLocal,
+      local_endereco: endereco,
+      local_maps_url: mapsUrl,
+      local_place_id: prediction.place_id ?? '',
+    }))
+  }
+
+  function handleChangeNome(e) {
+    const valor = e.target.value
+    setQuery(valor)
+    setMostrarSugestoes(true)
+    setForm(f => ({
+      ...f,
+      local_nome: valor,
+      local_maps_url: '',
+      local_place_id: '',
+    }))
+  }
+
+  function handleChangeEndereco(e) {
+    const valor = e.target.value
+    setForm(f => ({
+      ...f,
+      local_endereco: valor,
+      local_maps_url: '',
+      local_place_id: '',
+    }))
+  }
+
+  function handleBlur() {
+    window.setTimeout(() => setMostrarSugestoes(false), 120)
+  }
+
+  function handleFocus() {
+    if (sugestoes.length > 0) setMostrarSugestoes(true)
+  }
 
   return (
-    <div className="adm-field">
+    <div className="adm-field adm-local-field">
       <label>Local</label>
       <input
         ref={localNomeRef}
@@ -107,16 +161,39 @@ function LocalInput({ form, setForm, localNomeRef, localEnderecoRef }) {
         autoComplete="off"
         defaultValue={form.local_nome ?? ''}
         placeholder={mapsDisponivel ? 'Buscar local no Google Maps…' : 'Nome do local'}
+        onChange={handleChangeNome}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
       />
+
+      {mostrarSugestoes && sugestoes.length > 0 && (
+        <div className="adm-autocomplete-list">
+          {sugestoes.map(prediction => (
+            <button
+              key={prediction.place_id}
+              type="button"
+              className="adm-autocomplete-item"
+              onMouseDown={() => handleSelecionarSugestao(prediction)}
+            >
+              <strong>{prediction.structured_formatting?.main_text || prediction.description}</strong>
+              {prediction.structured_formatting?.secondary_text && (
+                <span>{prediction.structured_formatting.secondary_text}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       <input
         ref={localEnderecoRef}
         className="adm-input"
         style={{ marginTop: 6 }}
         placeholder="Endereço (opcional)"
         defaultValue={form.local_endereco ?? ''}
+        onChange={handleChangeEndereco}
       />
       <p className="adm-sub" style={{ marginTop: 4 }}>
-        {mapsDisponivel ? 'Selecione uma sugestão do Google Maps ou edite manualmente.' : 'O link do Google Maps sera gerado automaticamente ao salvar.'}
+        {mapsDisponivel ? 'Autocomplete do Google ativo.' : 'O link do Google Maps sera gerado automaticamente ao salvar.'}
       </p>
       {form.local_maps_url && (
         <a href={form.local_maps_url} target="_blank" rel="noopener noreferrer" className="adm-link" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
