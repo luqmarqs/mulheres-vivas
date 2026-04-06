@@ -254,10 +254,11 @@ function AddMembro({ onAdicionar }) {
 }
 
 function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
-  const { comite, membros, loading, adicionarMembro, removerMembro } = useComiteDetalhe(id)
+  const { comite, membros, loading, adicionarMembro, removerMembro, atualizarMembroPapel } = useComiteDetalhe(id)
   const [toggling, setToggling] = useState(false)
   const [removendo, setRemovendo] = useState(null)
   const [excluindo, setExcluindo] = useState(false)
+  const [editandoPapelId, setEditandoPapelId] = useState(null)
 
   function isResponsavel(membro) {
     const telResponsavel = normalizePhoneBR(comite?.responsavel_telefone)
@@ -283,6 +284,16 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
     setRemovendo(membroId)
     await removerMembro(membroId)
     setRemovendo(null)
+  }
+
+  async function handleAtualizarPapel(membroId, papel) {
+    setEditandoPapelId(membroId)
+    const erro = await atualizarMembroPapel(membroId, papel)
+    setEditandoPapelId(null)
+
+    if (erro) {
+      window.alert(`Não foi possível atualizar o papel: ${erro}`)
+    }
   }
 
   async function handleExcluirComite() {
@@ -354,16 +365,32 @@ function ComiteDetalhe({ id, onBack, onRefetch, onExcluir }) {
             <thead><tr><th>Nome</th><th>Papel</th><th>Telefone</th><th>Email</th><th></th></tr></thead>
             <tbody>
               {membros.map(m => (
-                <tr key={m.id}>
+                <tr key={m.id} className={isResponsavel(m) ? 'adm-tr-responsavel' : ''}>
                   <td>{m.nome}</td>
                   <td>
-                    <span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span>
-                    {isResponsavel(m) && (
-                      <span className="adm-badge adm-badge--ativo" style={{ marginLeft: 6 }}>responsável</span>
-                    )}
-                    {m.origem_membro === 'lead' && (
-                      <span className="adm-badge adm-badge--origem" style={{ marginLeft: 6 }}>lead</span>
-                    )}
+                    <div className="adm-role-cell">
+                      {m.origem_membro === 'membros_comite' ? (
+                        <select
+                          className="adm-papel-select"
+                          value={m.papel || 'membro'}
+                          onChange={e => handleAtualizarPapel(m.id, e.target.value)}
+                          disabled={editandoPapelId === m.id}
+                        >
+                          {PAPEIS.map(p => (
+                            <option key={p} value={p}>
+                              {p.charAt(0).toUpperCase() + p.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`adm-badge adm-badge--${m.papel}`}>{m.papel}</span>
+                      )}
+                      {m.origem_membro === 'lead' && (
+                        <div className="adm-role-meta">
+                          <span className="adm-badge adm-badge--origem">lead</span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td>
                     {m.telefone

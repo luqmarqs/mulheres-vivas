@@ -159,5 +159,16 @@ export function useComiteDetalhe(id) {
     await fetchMembros()
   }
 
-  return { comite, membros, loading, adicionarMembro, removerMembro }
+  async function atualizarMembroPapel(membroId, papel) {
+    const { error } = await supabase
+      .from('membros_comite')
+      .update({ papel })
+      .eq('id', membroId)
+
+    if (error) return error.message
+    await fetchMembros()
+    return null
+  }
+
+  return { comite, membros, loading, adicionarMembro, removerMembro, atualizarMembroPapel }
 }
