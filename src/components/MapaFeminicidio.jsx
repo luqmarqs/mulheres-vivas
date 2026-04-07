@@ -246,12 +246,7 @@ function MapaFeminicidio() {
             taxa100k: calcularTaxaPor100Mil(d.total, populacao),
           }
         })
-        .sort((a, b) => {
-          const taxaA = Number.isFinite(a.taxa100k) ? a.taxa100k : Number.NEGATIVE_INFINITY
-          const taxaB = Number.isFinite(b.taxa100k) ? b.taxa100k : Number.NEGATIVE_INFINITY
-          if (taxaB !== taxaA) return taxaB - taxaA
-          return b.total - a.total
-        })
+        .sort((a, b) => b.total - a.total)
 
       const top5 = listaMunicipios
         .slice(0, 5)
@@ -286,7 +281,7 @@ function MapaFeminicidio() {
         </div>
         <p class="mc-meta">População base: Censo 2022 (IBGE)</p>
         ${perfilHtml}
-        <h3 class="mc-subtitulo">Municípios com maior taxa (por 100 mil)</h3>
+        <h3 class="mc-subtitulo">Municípios com mais casos</h3>
         ${topHtml}
       `
     }
