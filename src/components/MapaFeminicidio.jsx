@@ -5,7 +5,6 @@ import { dsvFormat } from 'd3-dsv'
 
 const CSV_PATH = '/mapa/SPDadosCriminais_2026.csv'
 const GEOJSON_PATH = '/mapa/municipios.json'
-const IBGE_POP_URL = 'https://servicodados.ibge.gov.br/api/v3/agregados/10089/periodos/2022/variaveis/93?localidades=N6&classificacao=2[6794]|58[95253]|2661[32776]|1[6795]&view=flat'
 
 function getMarkerColor(value) {
   return value > 20 ? '#4a1575' :
@@ -37,54 +36,6 @@ function normalizeText(value) {
 
 function normalizeIbge(value) {
   return String(value || '').replace(/\D/g, '')
-}
-
-function formatarInteiroBR(value) {
-  if (!Number.isFinite(value)) return 'N/D'
-  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value)
-}
-
-function calcularTaxaPor100Mil(total, populacao) {
-  if (!Number.isFinite(populacao) || populacao <= 0) return null
-  return (Number(total || 0) * 100000) / populacao
-}
-
-function formatarTaxaPor100Mil(total, populacao) {
-  const taxa = calcularTaxaPor100Mil(total, populacao)
-  if (!Number.isFinite(taxa)) return 'N/D'
-  return `${taxa.toFixed(2).replace('.', ',')}`
-}
-
-function parseNumeroIbge(value) {
-  const limpo = String(value || '').replace(/\./g, '').replace(',', '.').trim()
-  const n = Number(limpo)
-  return Number.isFinite(n) ? n : null
-}
-
-async function carregarPopulacaoIbge(signal) {
-  try {
-    const res = await fetch(IBGE_POP_URL, { signal })
-    if (!res.ok) throw new Error(`HTTP ${res.status} ao carregar população IBGE`)
-
-    const rows = await res.json()
-    const porMunicipio = {}
-    let populacaoEstadoSP = 0
-
-    ;(rows || []).slice(1).forEach((row) => {
-      const ibge = normalizeIbge(row?.D1C || row?.D3C)
-      if (!ibge || !ibge.startsWith('35')) return
-
-      const populacao = parseNumeroIbge(row?.V)
-      if (!Number.isFinite(populacao)) return
-
-      porMunicipio[ibge] = populacao
-      populacaoEstadoSP += populacao
-    })
-
-    return { porMunicipio, populacaoEstadoSP }
-  } catch {
-    return { porMunicipio: {}, populacaoEstadoSP: 0 }
-  }
 }
 
 function escapeHtml(value) {
@@ -235,17 +186,9 @@ function MapaFeminicidio() {
 
       mapInstanceRef.current = map
 
-    function atualizarPainelEstado(dataMap, totais, popIBGE) {
+    function atualizarPainelEstado(dataMap, totais) {
       const listaMunicipios = Object.entries(dataMap)
-        .map(([ibge, d]) => {
-          const populacao = popIBGE.porMunicipio?.[ibge] ?? null
-          return {
-            ibge,
-            ...d,
-            populacao,
-            taxa100k: calcularTaxaPor100Mil(d.total, populacao),
-          }
-        })
+        .map(([ibge, d]) => ({ ibge, ...d }))
         .sort((a, b) => b.total - a.total)
 
       const top5 = listaMunicipios
@@ -264,10 +207,8 @@ function MapaFeminicidio() {
         </div>
       ` : ''
 
-      const taxaEstado = formatarTaxaPor100Mil(totais.total, popIBGE.populacaoEstadoSP)
-
       const topHtml = top5.length ? `<ul class="mc-lista">
-        ${top5.map(m => `<li><b>${escapeHtml(m.cidade || 'Município')}</b>: ${m.total} casos (${escapeHtml(formatarTaxaPor100Mil(m.total, m.populacao))}/100 mil) (C: ${m.consumado} | T: ${m.tentativa})</li>`).join('')}
+        ${top5.map(m => `<li><b>${escapeHtml(m.cidade || 'Município')}</b>: ${m.total} casos (C: ${m.consumado} | T: ${m.tentativa})</li>`).join('')}
       </ul>` : '<div class="mc-vazio">Sem dados para 2026.</div>'
 
       painel.innerHTML = `
@@ -277,22 +218,18 @@ function MapaFeminicidio() {
           <div class="mc-chip"><strong>${totais.consumado}</strong><span>Consumados</span></div>
           <div class="mc-chip"><strong>${totais.tentativa}</strong><span>Tentativas</span></div>
           <div class="mc-chip"><strong>${totais.total}</strong><span>Total</span></div>
-          <div class="mc-chip"><strong>${taxaEstado}</strong><span>por 100 mil</span></div>
         </div>
-        <p class="mc-meta">População base: Censo 2022 (IBGE)</p>
         ${perfilHtml}
         <h3 class="mc-subtitulo">Municípios com mais casos</h3>
         ${topHtml}
       `
     }
 
-    function atualizarPainelCidade(cidade, ibge, dados, dataMap, totais, popIBGE) {
+    function atualizarPainelCidade(cidade, ibge, dados, dataMap, totais) {
       const consumados = [...dados.casosConsumados].sort((a, b) => b.ordemTempo - a.ordemTempo)
       const tentativas = [...dados.casosTentativa].sort((a, b) => b.ordemTempo - a.ordemTempo)
       const todos = [...consumados, ...tentativas]
       const tags = gerarPerfilTags(todos)
-      const populacao = popIBGE.porMunicipio?.[ibge] ?? null
-      const taxaCidade = formatarTaxaPor100Mil(dados.total, populacao)
 
       const perfilHtml = tags.length ? `
         <div class="mc-perfil">
@@ -315,12 +252,11 @@ function MapaFeminicidio() {
           <h2 class="mc-painel-titulo">${escapeHtml(cidade)}</h2>
           <button id="mc-btn-voltar" class="mc-btn-voltar" type="button">← Voltar</button>
         </div>
-        <p class="mc-meta">IBGE: ${escapeHtml(ibge)} · Ano: 2026 · População (IBGE/Censo 2022): ${escapeHtml(formatarInteiroBR(populacao))}</p>
+        <p class="mc-meta">IBGE: ${escapeHtml(ibge)} · Ano: 2026</p>
         <div class="mc-resumo">
           <div class="mc-chip"><strong>${dados.consumado}</strong><span>Consumados</span></div>
           <div class="mc-chip"><strong>${dados.tentativa}</strong><span>Tentativas</span></div>
           <div class="mc-chip"><strong>${dados.total}</strong><span>Total</span></div>
-          <div class="mc-chip"><strong>${taxaCidade}</strong><span>por 100 mil</span></div>
         </div>
         ${perfilHtml}
         <h3 class="mc-subtitulo">Casos consumados</h3>
@@ -330,7 +266,7 @@ function MapaFeminicidio() {
       `
 
       document.getElementById('mc-btn-voltar')?.addEventListener('click', () => {
-        atualizarPainelEstado(dataMap, totais, popIBGE)
+        atualizarPainelEstado(dataMap, totais)
       })
     }
 
@@ -351,8 +287,7 @@ function MapaFeminicidio() {
       fetch(GEOJSON_PATH, { signal })
         .then(r => checkOk(r, GEOJSON_PATH))
         .then(r => r.json()),
-      carregarPopulacaoIbge(signal),
-    ]).then(([csvData, geoData, popIBGE]) => {
+    ]).then(([csvData, geoData]) => {
       const dataMap = {}
 
       csvData.forEach(d => {
@@ -385,7 +320,7 @@ function MapaFeminicidio() {
         { total: 0, consumado: 0, tentativa: 0 }
       )
 
-      atualizarPainelEstado(dataMap, totais, popIBGE)
+      atualizarPainelEstado(dataMap, totais)
 
       // Garante dimensões corretas antes de qualquer projeção de coordenadas
       map.invalidateSize({ animate: false })
@@ -439,12 +374,11 @@ function MapaFeminicidio() {
           `<b>${escapeHtml(cidade)}</b><br>` +
           `Consumados: ${dados.consumado}<br>` +
           `Tentativas: ${dados.tentativa}<br>` +
-          `Total: ${dados.total}<br>` +
-          `Taxa: ${formatarTaxaPor100Mil(dados.total, popIBGE.porMunicipio?.[ibge] ?? null)}/100 mil`
+          `Total: ${dados.total}`
         )
 
         marker.on('click', () => {
-          atualizarPainelCidade(cidade, ibge, dados, dataMap, totais, popIBGE)
+          atualizarPainelCidade(cidade, ibge, dados, dataMap, totais)
         })
       })
 
