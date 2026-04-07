@@ -57,7 +57,7 @@ function ComitesSection() {
               document.getElementById('assinar')?.scrollIntoView({ behavior: 'smooth' })
             }}
           >
-            Quero organizar um comitê
+            Quero participar de um comitê
           </a>
         </div>
       </div>

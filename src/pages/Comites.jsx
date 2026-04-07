@@ -32,7 +32,7 @@ function Comites() {
         ) : comites.length === 0 ? (
           <div className="comites-empty">
             <p>Nenhum comitê encontrado{search ? ` em "${search}"` : ''}.</p>
-            <Link to="/#assinar" className="btn btn-primary">Criar um comitê</Link>
+            <Link to="/#assinar" className="btn btn-primary">Quero participar de um comitê</Link>
           </div>
         ) : (
           <div className="comites-grid">
@@ -63,7 +63,7 @@ function Comites() {
         <div className="comites-cta">
           <p>Não encontrou sua cidade?</p>
           <Link to="/" className="btn btn-primary">
-            Organizar um comitê
+            Quero participar de um comitê
           </Link>
         </div>
       </div>
