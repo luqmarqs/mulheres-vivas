@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { normalizePhoneBR } from '../utils/phone'
+import { insertLead as _insertLead } from '../lib/leads'
 
 export function useLeads({ search = '', cidade = '', comiteId = '', intencao = '' } = {}) {
   const [leads, setLeads] = useState([])
@@ -35,37 +35,4 @@ export function useLeads({ search = '', cidade = '', comiteId = '', intencao = '
   return { leads, loading, error, refetch: fetchLeads }
 }
 
-export async function insertLead(lead) {
-  const telefone = normalizePhoneBR(lead.telefone)
-
-  // Associar comitê automaticamente pela cidade
-  let comite_id = null
-  if (lead.cidade) {
-    const { data } = await supabase
-      .from('comites')
-      .select('id')
-      .ilike('cidade', lead.cidade)
-      .eq('ativo', true)
-      .limit(1)
-      .maybeSingle()
-    comite_id = data?.id ?? null
-  }
-
-  // Evitar duplicidade por telefone
-  const { data: existente } = await supabase
-    .from('leads')
-    .select('id')
-    .eq('telefone', telefone)
-    .maybeSingle()
-
-  if (existente) return { error: 'Telefone já cadastrado.' }
-
-  const { error } = await supabase.from('leads').insert({
-    ...lead,
-    telefone,
-    comite_id,
-    origem: lead.origem ?? 'form_abaixo_assinado',
-  })
-
-  return { error: error?.message ?? null }
-}
+export { _insertLead as insertLead }

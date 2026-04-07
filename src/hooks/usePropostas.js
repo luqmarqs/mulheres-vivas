@@ -1,51 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { normalizePhoneBR } from '../utils/phone'
-
-async function upsertLead(form, intencao) {
-  const telefone = normalizePhoneBR(form.telefone)
-
-  // Busca comitê da cidade para associar
-  let comite_id = null
-  if (form.cidade) {
-    const { data } = await supabase
-      .from('comites')
-      .select('id')
-      .ilike('cidade', form.cidade)
-      .eq('ativo', true)
-      .limit(1)
-      .maybeSingle()
-    comite_id = data?.id ?? null
-  }
-
-  // Evita duplicidade por telefone — atualiza intenção se mais relevante que a atual
-  const { data: existente } = await supabase
-    .from('leads')
-    .select('id, intencao')
-    .eq('telefone', telefone)
-    .maybeSingle()
-
-  if (existente) {
-    const RANK = { organizar: 3, convidar: 2, participar: 1 }
-    if ((RANK[intencao] ?? 0) > (RANK[existente.intencao] ?? 0)) {
-      await supabase.from('leads').update({ intencao }).eq('id', existente.id)
-    }
-    return
-  }
-
-  await supabase.from('leads').insert({
-    nome: form.nome,
-    telefone,
-    email: form.email || null,
-    cidade: form.cidade || null,
-    uf: form.uf || null,
-    nascimento: form.nascimento || null,
-    comite_id,
-    intencao,
-    novidades: form.novidades ?? true,
-    origem: intencao === 'organizar' ? 'form_comite' : 'form_agenda',
-  })
-}
+import { upsertLead } from '../lib/leads'
 
 // ---- Inserções públicas ----
 
@@ -88,7 +44,10 @@ export async function insertPropostaAgenda(form) {
 
 // ---- Hooks admin ----
 
+const TABELAS_PROPOSTAS = ['propostas_comite', 'propostas_agenda']
+
 function usePropostas(tabela, { search = '', status = '' } = {}) {
+  if (!TABELAS_PROPOSTAS.includes(tabela)) throw new Error(`[usePropostas] Tabela inválida: ${tabela}`)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

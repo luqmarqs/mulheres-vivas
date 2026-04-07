@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAgendasAdmin } from '../../hooks/useAgendas'
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
+import { formatarDataCurta as formatarData } from '../../utils/date'
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? ''
 
@@ -221,6 +222,8 @@ function FormAgenda({ inicial, onSalvar, onCancelar }) {
   function handleImagem(e) {
     const file = e.target.files[0]
     if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setErro('Imagem muito grande (máximo 5 MB).'); return }
+    setErro('')
     setImagemFile(file)
     setPreview(URL.createObjectURL(file))
   }
@@ -318,10 +321,6 @@ function AdminAgendas() {
     setPublicando(null)
   }
 
-  function formatarData(dataStr) {
-    const [ano, mes, dia] = dataStr.split('-')
-    return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  }
 
   if (criando) return (
     <FormAgenda

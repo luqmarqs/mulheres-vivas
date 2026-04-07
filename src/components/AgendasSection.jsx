@@ -1,10 +1,5 @@
 import { useAgendasSemana } from '../hooks/useAgendas'
-
-function formatarData(dataStr) {
-  const [ano, mes, dia] = dataStr.split('-')
-  const data = new Date(ano, mes - 1, dia)
-  return data.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-}
+import { formatarData } from '../utils/date'
 
 function toCalendarStamp(date) {
   const yyyy = date.getFullYear()

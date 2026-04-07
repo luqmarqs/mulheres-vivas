@@ -1,14 +1,14 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { useLeads } from '../../hooks/useLeads'
 import { formatPhoneBR, toWhatsAppUrl } from '../../utils/phone'
 
 function useDebounce(fn, delay) {
-  let timer
-  return (...args) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn(...args), delay)
-  }
+  const timer = useRef(null)
+  return useCallback((...args) => {
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => fn(...args), delay)
+  }, [fn, delay])
 }
 
 function buildRows(leads) {
@@ -61,10 +61,7 @@ function AdminLeads() {
 
   const { leads, loading, error, refetch } = useLeads({ search, cidade, intencao })
 
-  const applySearch = useCallback(
-    useDebounce((val) => setSearch(val), 400),
-    []
-  )
+  const applySearch = useDebounce((val) => setSearch(val), 400)
 
   return (
     <div className="adm-leads">

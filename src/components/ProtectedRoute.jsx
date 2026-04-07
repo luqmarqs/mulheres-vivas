@@ -21,9 +21,11 @@ function ProtectedRoute({ children }) {
       return
     }
 
+    let cancelled = false
     isAdmin(session.user.email).then(ok => {
-      setAdminCheck(ok ? 'ok' : 'denied')
+      if (!cancelled) setAdminCheck(ok ? 'ok' : 'denied')
     })
+    return () => { cancelled = true }
   }, [session, loading])
 
   if (loading || adminCheck === 'loading') {

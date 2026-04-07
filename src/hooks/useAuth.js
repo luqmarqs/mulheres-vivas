@@ -7,13 +7,8 @@ export function useAuth() {
   useEffect(() => {
     if (!supabaseConfigurado) { setSession(null); return }
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session) {
-        const { data: refreshed } = await supabase.auth.refreshSession()
-        setSession(refreshed.session ?? data.session)
-      } else {
-        setSession(null)
-      }
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
