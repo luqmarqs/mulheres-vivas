@@ -453,7 +453,7 @@ function AdminComites() {
       <div className="adm-filters">
         <input
           className="adm-input"
-          placeholder="Buscar por cidade…"
+          placeholder="Buscar por nome ou cidade…"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />

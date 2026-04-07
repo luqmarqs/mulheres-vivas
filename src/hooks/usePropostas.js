@@ -18,27 +18,33 @@ async function upsertLead(form, intencao) {
     comite_id = data?.id ?? null
   }
 
-  // Evita duplicidade por telefone — apenas insere se não existe
+  // Evita duplicidade por telefone — atualiza intenção se mais relevante que a atual
   const { data: existente } = await supabase
     .from('leads')
-    .select('id')
+    .select('id, intencao')
     .eq('telefone', telefone)
     .maybeSingle()
 
-  if (!existente) {
-    await supabase.from('leads').insert({
-      nome: form.nome,
-      telefone,
-      email: form.email || null,
-      cidade: form.cidade || null,
-      uf: form.uf || null,
-      nascimento: form.nascimento || null,
-      comite_id,
-      intencao,
-      novidades: form.novidades ?? true,
-      origem: intencao === 'organizar' ? 'form_comite' : 'form_agenda',
-    })
+  if (existente) {
+    const RANK = { organizar: 3, convidar: 2, participar: 1 }
+    if ((RANK[intencao] ?? 0) > (RANK[existente.intencao] ?? 0)) {
+      await supabase.from('leads').update({ intencao }).eq('id', existente.id)
+    }
+    return
   }
+
+  await supabase.from('leads').insert({
+    nome: form.nome,
+    telefone,
+    email: form.email || null,
+    cidade: form.cidade || null,
+    uf: form.uf || null,
+    nascimento: form.nascimento || null,
+    comite_id,
+    intencao,
+    novidades: form.novidades ?? true,
+    origem: intencao === 'organizar' ? 'form_comite' : 'form_agenda',
+  })
 }
 
 // ---- Inserções públicas ----

@@ -7,7 +7,7 @@ import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR } from '../utils/phone'
 
 const TABS = [
   { id: 'assinar',  label: '✊ Abaixo-assinado' },
-  { id: 'comite',   label: '🏘️ Quero participar ou criar um comitê' },
+  { id: 'comite',   label: '🏘️ Quero participar' },
   { id: 'convidar', label: '📣 Convidar a Bancada' },
 ]
 

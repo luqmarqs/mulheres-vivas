@@ -323,7 +323,6 @@ function AdminPropostasComite() {
                 <th>Telefone</th>
                 <th>Email</th>
                 <th>Cidade / UF</th>
-                <th>WhatsApp</th>
                 <th>Status</th>
                 <th>Data</th>
                 <th></th>
@@ -340,11 +339,6 @@ function AdminPropostasComite() {
                   </td>
                   <td>{item.email ?? '—'}</td>
                   <td>{[item.cidade, item.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td>
-                    {item.whatsapp_link
-                      ? <a href={item.whatsapp_link} target="_blank" rel="noopener noreferrer" className="adm-link">Ver grupo</a>
-                      : '—'}
-                  </td>
                   <td><StatusBadge status={item.status} /></td>
                   <td>{new Date(item.created_at).toLocaleDateString('pt-BR')}</td>
                   <td style={{ display: 'flex', gap: 6 }}>

@@ -102,7 +102,7 @@ function AdminDashboard() {
         <StatCard label="Comitês ativos" value={stats.totalComites} />
         <StatCard label="Agendas publicadas" value={stats.totalAgendas} />
         <StatCard
-          label="Propostas"
+          label="Propostas pendentes"
           value={(stats.propostasComite ?? 0) + (stats.propostasAgenda ?? 0)}
           sub={`${stats.propostasComite} comitê · ${stats.propostasAgenda} agenda`}
           accent="#c49eea"

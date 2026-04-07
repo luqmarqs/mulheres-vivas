@@ -94,6 +94,7 @@ function AdminLeads() {
           <option value="">Todas as intenções</option>
           <option value="participar">Participar</option>
           <option value="organizar">Participar ou criar comitê</option>
+          <option value="convidar">Convidar Bancada</option>
         </select>
       </div>
 

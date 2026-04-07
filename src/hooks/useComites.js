@@ -17,7 +17,7 @@ export function useComites({ search = '', apenasAtivos = true } = {}) {
       .order('created_at', { ascending: false })
 
     if (apenasAtivos) query = query.eq('ativo', true)
-    if (search) query = query.ilike('cidade', `%${search}%`)
+    if (search) query = query.or(`cidade.ilike.%${search}%,nome.ilike.%${search}%`)
 
     const { data, error } = await query
     if (error) setError(error.message)
