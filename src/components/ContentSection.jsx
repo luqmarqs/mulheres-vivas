@@ -5,17 +5,17 @@ const cards = [
   {
     icon: '✍️',
     title: 'Assine o abaixo-assinado',
-    body: 'Exigimos que o governador declare estado de emergência pública diante do crescimento alarmante do feminicídio em São Paulo. Cada assinatura é uma voz.',
+    body: 'Exigimos que o governador declare estado de emergência pública diante do crescimento alarmante do feminicídio em São Paulo. Cada assinatura é uma voz que não pode ser ignorada.',
   },
   {
-    icon: '🏘️',
-    title: 'Organize um comitê',
-    body: 'Forme um comitê na sua cidade, bairro ou escola. Os comitês são a base da campanha — é onde a mobilização acontece de verdade.',
+    icon: '🚌',
+    title: 'Jornada contra o feminicídio',
+    body: 'A Bancada Feminista do PSOL percorre o estado de São Paulo em uma caravana de mobilização. De cidade em cidade, construímos atividades, rodas de conversa e atos públicos para enfrentar a violência contra a mulher onde ela acontece.',
   },
   {
     icon: '📣',
     title: 'Convide a Bancada',
-    body: 'Quer que a Bancada Feminista venha ao seu evento, escola ou comunidade? Faça o convite e nossa equipe avalia a agenda.',
+    body: 'Quer receber a Bancada Feminista no seu evento, escola ou comunidade? Faça o convite e nossa equipe avalia a agenda.',
   },
 ]
 
@@ -41,8 +41,15 @@ function ContentSection() {
             A <strong>Bancada Feminista do PSOL</strong> — covereadoras, codeputadas e
             ativistas eleitas para colocar as pautas das mulheres no centro da política —
             lança a campanha <strong>Mulheres Vivas</strong>: um movimento de pressão
-            popular com abaixo-assinado, comitês de base em todo o estado e presença
-            direta nas comunidades. Assine, organize e convide — cada ação conta.
+            popular com abaixo-assinado, presença direta nas comunidades e uma caravana
+            que percorre o estado exigindo respostas concretas do poder público.
+          </p>
+          <p>
+            A <strong>Jornada contra o Feminicídio</strong> leva a Bancada Feminista de
+            cidade em cidade pelo interior e pela Grande São Paulo. Em cada parada,
+            construímos atividades de mobilização, rodas de conversa com mulheres locais
+            e atos públicos de denúncia — porque enfrentar a violência contra a mulher
+            exige presença onde ela acontece. Assine, participe e convide — cada ação conta.
           </p>
         </div>
 

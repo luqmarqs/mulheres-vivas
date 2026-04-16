@@ -261,7 +261,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
               </div>
 
               <button type="submit" disabled={loading}>
-                {loading ? 'Enviando…' : activeTab === 'assinar' ? 'QUERO ME MOBILIZAR' : 'ENVIAR CONVITE'}
+                {loading ? 'Enviando…' : activeTab === 'assinar' ? 'ASSINAR' : 'ENVIAR CONVITE'}
               </button>
               <button type="button" onClick={onShare}>Compartilhar no WhatsApp</button>
             </form>

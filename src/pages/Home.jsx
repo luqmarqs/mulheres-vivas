@@ -15,7 +15,7 @@ function Home() {
       `O feminicídio cresce em São Paulo e o poder público faz pouco. ` +
       `A Bancada Feminista lança essa campanha exigindo estado de emergência pública.\n\n` +
       `✍️ Assine o abaixo-assinado\n` +
-      `🏘️ Organize um comitê na sua cidade\n` +
+      `🚌 Acompanhe a Jornada contra o Feminicídio\n` +
       `📣 Convide a Bancada para o seu evento\n\n` +
       `Acesse e some sua voz: ${url}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
