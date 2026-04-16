@@ -32,7 +32,7 @@ function fmtSec(sec) {
 
 function AdminDashboard() {
   const { stats, loading } = useAdminStats()
-  const { data: ga, loading: gaLoading } = useGAMetrics()
+  const { data: ga, loading: gaLoading, error: gaError } = useGAMetrics()
   const [periodo, setPeriodo] = useState(7)
 
   if (loading) return <div className="adm-loading">Carregando…</div>
@@ -149,6 +149,8 @@ function AdminDashboard() {
               </div>
             )}
           </>
+        ) : gaError ? (
+          <span className="adm-ga-strip-loading" title={gaError}>Analytics indisponível — {gaError}</span>
         ) : (
           <span className="adm-ga-strip-loading">Analytics não configurado</span>
         )}

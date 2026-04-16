@@ -10,7 +10,7 @@ import AdminGA from '../components/admin/AdminGA'
 const TABS = [
   { id: 'dashboard',         label: 'Dashboard' },
   { id: 'leads',             label: 'Leads' },
-  { id: 'propostas_agenda',  label: 'Prop. Agenda' },
+  { id: 'propostas_agenda',  label: 'Propostas de Agenda' },
   { id: 'agendas',           label: 'Agendas' },
   { id: 'ga',                label: 'Analytics' },
   { id: 'usuarios',          label: 'Admins' },
