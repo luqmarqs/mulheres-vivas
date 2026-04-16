@@ -9,7 +9,7 @@ const cards = [
   },
   {
     icon: '🚌',
-    title: 'Jornada contra o feminicídio',
+    title: 'Caravana Mulheres Vivas',
     body: 'A Bancada Feminista do PSOL percorre o estado de São Paulo em uma caravana de mobilização. De cidade em cidade, construímos atividades, rodas de conversa e atos públicos para enfrentar a violência contra a mulher onde ela acontece.',
   },
   {
@@ -45,7 +45,7 @@ function ContentSection() {
             que percorre o estado exigindo respostas concretas do poder público.
           </p>
           <p>
-            A <strong>Jornada contra o Feminicídio</strong> leva a Bancada Feminista de
+            A <strong>Caravana Mulheres Vivas</strong> leva a Bancada Feminista de
             cidade em cidade pelo interior e pela Grande São Paulo. Em cada parada,
             construímos atividades de mobilização, rodas de conversa com mulheres locais
             e atos públicos de denúncia — porque enfrentar a violência contra a mulher
