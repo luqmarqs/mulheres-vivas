@@ -27,7 +27,7 @@ export async function insertLead(lead) {
   return { error: error?.message ?? null }
 }
 
-const RANK_INTENCAO = { organizar: 3, convidar: 2, participar: 1 }
+const RANK_INTENCAO = { convidar: 2, participar: 1 }
 
 /**
  * Insere ou atualiza um lead.

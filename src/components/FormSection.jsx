@@ -7,7 +7,7 @@ import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR } from '../utils/phone'
 
 const TABS = [
   { id: 'assinar',  label: '✊ Abaixo-assinado' },
-  { id: 'convidar', label: '📣 Convidar a Bancada' },
+  { id: 'convidar', label: '📣 Convidar a Bancada Feminista' },
 ]
 
 const EMPTY_FORM = {
@@ -229,7 +229,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
                   {camposBase}
                   <label className="newsletter">
                     <input type="checkbox" checked={form.novidades} onChange={e => setForm({ ...form, novidades: e.target.checked })} />
-                    Aceito receber novidades da campanha
+                    Aceito receber novidades da Bancada Feminista
                   </label>
                 </>
               )}
@@ -246,7 +246,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
                   />
                   <label className="newsletter">
                     <input type="checkbox" checked={form.novidades} onChange={e => setForm({ ...form, novidades: e.target.checked })} />
-                    Aceito receber novidades da campanha
+                    Aceito receber novidades da Bancada Feminista
                   </label>
                 </>
               )}

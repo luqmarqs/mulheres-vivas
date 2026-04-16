@@ -63,7 +63,7 @@ export function useAdminStats() {
       const topCidades = Object.entries(cidadeMap).sort((a, b) => b[1] - a[1]).slice(0, 7)
 
       // por intenção
-      const intencaoMap = { participar: 0, organizar: 0, convidar: 0 }
+      const intencaoMap = { participar: 0, convidar: 0 }
       ;(leadsPorIntencao ?? []).forEach(l => {
         if (l.intencao in intencaoMap) intencaoMap[l.intencao]++
       })

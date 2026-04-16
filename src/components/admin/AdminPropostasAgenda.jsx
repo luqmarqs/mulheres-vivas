@@ -181,7 +181,11 @@ function AcaoModal({ item, onSave, onClose, onCriarAgenda }) {
           <div className="adm-field" style={{ marginTop: 8 }}>
             <label>Imagem</label>
             {agendaImagemPreview && <img src={agendaImagemPreview} alt="preview" className="adm-agenda-preview" />}
-            <input type="file" accept="image/*" onChange={handleAgendaImagem} className="adm-file-input" />
+            <label className="adm-file-label">
+              <input type="file" accept="image/*" onChange={handleAgendaImagem} className="adm-file-input" />
+              <span className="adm-file-btn">📁 Escolher imagem</span>
+              <span className="adm-file-name">{agendaImagemPreview ? 'Arquivo selecionado' : 'Nenhum arquivo'}</span>
+            </label>
           </div>
 
           <label className="adm-check-label" style={{ marginTop: 8 }}>

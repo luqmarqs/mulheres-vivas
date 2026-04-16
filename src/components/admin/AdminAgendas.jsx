@@ -276,7 +276,11 @@ function FormAgenda({ inicial, onSalvar, onCancelar }) {
         <div className="adm-field">
           <label>Imagem</label>
           {preview && <img src={preview} alt="preview" className="adm-agenda-preview" />}
-          <input type="file" accept="image/*" onChange={handleImagem} className="adm-file-input" />
+          <label className="adm-file-label">
+            <input type="file" accept="image/*" onChange={handleImagem} className="adm-file-input" />
+            <span className="adm-file-btn">📁 Escolher imagem</span>
+            <span className="adm-file-name">{form.imagem_url ? 'Arquivo selecionado' : 'Nenhum arquivo'}</span>
+          </label>
         </div>
 
         <label className="adm-check-label" style={{ marginTop: 4 }}>

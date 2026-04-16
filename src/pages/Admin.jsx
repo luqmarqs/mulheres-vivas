@@ -5,12 +5,14 @@ import AdminLeads from '../components/admin/AdminLeads'
 import AdminUsuarios from '../components/admin/AdminUsuarios'
 import AdminPropostasAgenda from '../components/admin/AdminPropostasAgenda'
 import AdminAgendas from '../components/admin/AdminAgendas'
+import AdminGA from '../components/admin/AdminGA'
 
 const TABS = [
   { id: 'dashboard',         label: 'Dashboard' },
   { id: 'leads',             label: 'Leads' },
   { id: 'propostas_agenda',  label: 'Prop. Agenda' },
   { id: 'agendas',           label: 'Agendas' },
+  { id: 'ga',                label: 'Analytics' },
   { id: 'usuarios',          label: 'Admins' },
 ]
 
@@ -90,6 +92,7 @@ function Admin() {
         {tab === 'leads' && <AdminLeads />}
         {tab === 'propostas_agenda' && <AdminPropostasAgenda />}
         {tab === 'agendas' && <AdminAgendas />}
+        {tab === 'ga' && <AdminGA />}
         {tab === 'usuarios' && <AdminUsuarios />}
       </main>
     </div>

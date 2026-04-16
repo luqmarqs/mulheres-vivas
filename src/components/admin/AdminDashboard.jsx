@@ -9,7 +9,7 @@ import { useAdminStats } from '../../hooks/useAdminStats'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler, ArcElement, Legend)
 
-const INTENCAO_LABEL = { participar: 'Abaixo-assinado', organizar: 'Participar ou criar comitê', convidar: 'Convidar Bancada' }
+const INTENCAO_LABEL = { participar: 'Abaixo-assinado', convidar: 'Convidar Bancada' }
 const INTENCAO_COLORS = ['#9b5fd4', '#6b2fa0', '#c49eea']
 
 function StatCard({ label, value, sub, accent }) {
