@@ -63,7 +63,14 @@ export function useGAMetrics() {
       })
 
       if (res.error) {
-        const detail = res.data?.error ?? res.error.message
+        console.error('[GA] invoke error:', res.error)
+        console.error('[GA] invoke data:', res.data)
+        let detail = res.error.message
+        try {
+          const body = await res.error.context?.json?.()
+          if (body?.error) detail = body.error
+          console.error('[GA] error body:', body)
+        } catch (_) {}
         setError(detail)
         setLoading(false)
         return
