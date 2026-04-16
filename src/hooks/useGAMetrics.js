@@ -62,7 +62,12 @@ export function useGAMetrics() {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
 
-      if (res.error) { setError(res.error.message); setLoading(false); return }
+      if (res.error) {
+        const detail = res.data?.error ?? res.error.message
+        setError(detail)
+        setLoading(false)
+        return
+      }
 
       const raw = res.data
       setData({
