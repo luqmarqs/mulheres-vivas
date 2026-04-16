@@ -12,9 +12,7 @@ export function useAdminStats() {
 
       const [
         { count: totalLeads },
-        { count: totalComites },
         { count: totalAgendas },
-        { count: propostasComite },
         { count: propostasAgenda },
         { data: leadsRecentes7 },
         { data: leadsRecentes30 },
@@ -23,9 +21,7 @@ export function useAdminStats() {
         { data: ultimosLeads },
       ] = await Promise.all([
         supabase.from('leads').select('*', { count: 'exact', head: true }),
-        supabase.from('comites').select('*', { count: 'exact', head: true }).eq('ativo', true),
         supabase.from('agendas').select('*', { count: 'exact', head: true }).eq('publicado', true),
-        supabase.from('propostas_comite').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
         supabase.from('propostas_agenda').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
         supabase.from('leads').select('created_at').gte('created_at', sete).order('created_at'),
         supabase.from('leads').select('created_at').gte('created_at', trinta).order('created_at'),
@@ -74,9 +70,7 @@ export function useAdminStats() {
 
       setStats({
         totalLeads,
-        totalComites,
         totalAgendas,
-        propostasComite,
         propostasAgenda,
         leads7dias: (leadsRecentes7 ?? []).length,
         leads30dias: (leadsRecentes30 ?? []).length,

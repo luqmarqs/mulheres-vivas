@@ -5,25 +5,6 @@ import { upsertLead } from '../lib/leads'
 
 // ---- Inserções públicas ----
 
-export async function insertPropostaComite(form) {
-  const telefone = normalizePhoneBR(form.telefone)
-
-  const [{ error }] = await Promise.all([
-    supabase.from('propostas_comite').insert({
-      nome: form.nome,
-      telefone,
-      email: form.email || null,
-      cidade: form.cidade || null,
-      uf: form.uf || null,
-      whatsapp_link: null,
-      status: 'pendente',
-    }),
-    upsertLead(form, 'organizar'),
-  ])
-
-  return { error: error?.message ?? null }
-}
-
 export async function insertPropostaAgenda(form) {
   const telefone = normalizePhoneBR(form.telefone)
 
@@ -44,10 +25,7 @@ export async function insertPropostaAgenda(form) {
 
 // ---- Hooks admin ----
 
-const TABELAS_PROPOSTAS = ['propostas_comite', 'propostas_agenda']
-
 function usePropostas(tabela, { search = '', status = '' } = {}) {
-  if (!TABELAS_PROPOSTAS.includes(tabela)) throw new Error(`[usePropostas] Tabela inválida: ${tabela}`)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -84,10 +62,6 @@ function usePropostas(tabela, { search = '', status = '' } = {}) {
   }
 
   return { items, loading, error, atualizarStatus, remover, refetch: fetch }
-}
-
-export function usePropostasComite(filtros) {
-  return usePropostas('propostas_comite', filtros)
 }
 
 export function usePropostasAgenda(filtros) {

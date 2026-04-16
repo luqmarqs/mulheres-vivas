@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useCidades } from '../hooks/useCidades'
 import { insertLead } from '../hooks/useLeads'
-import { insertPropostaComite, insertPropostaAgenda } from '../hooks/usePropostas'
+import { insertPropostaAgenda } from '../hooks/usePropostas'
 import { supabaseConfigurado } from '../lib/supabase'
 import { formatPhoneBR, isValidPhoneBR, normalizePhoneBR } from '../utils/phone'
 
 const TABS = [
   { id: 'assinar',  label: '✊ Abaixo-assinado' },
-  { id: 'comite',   label: '🏘️ Quero participar de um comitê' },
   { id: 'convidar', label: '📣 Convidar a Bancada' },
 ]
 
@@ -108,7 +107,6 @@ function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, s
 function FormSucesso({ tab, onReset, onShare }) {
   const msgs = {
     assinar:  { titulo: 'Assinatura registrada!', corpo: 'Obrigada por assinar. Juntas somos mais fortes!' },
-    comite:   { titulo: 'Proposta enviada!', corpo: 'Recebemos sua proposta de comitê. A criação do comitê é feita pela equipe no admin após avaliação.' },
     convidar: { titulo: 'Convite enviado!', corpo: 'Recebemos seu pedido. Avaliaremos a agenda e entraremos em contato.' },
   }
   const { titulo, corpo } = msgs[tab]
@@ -165,9 +163,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
     if (!supabaseConfigurado) { setLoading(false); setSucesso(true); return }
 
     let result
-    if (activeTab === 'comite') {
-      result = await insertPropostaComite(form)
-    } else if (activeTab === 'convidar') {
+    if (activeTab === 'convidar') {
       result = await insertPropostaAgenda(form)
     } else {
       result = await insertLead({
@@ -238,16 +234,6 @@ function FormSection({ onOpenPrivacy, onShare }) {
                 </>
               )}
 
-              {activeTab === 'comite' && (
-                <>
-                  {camposBase}
-                  <label className="newsletter">
-                    <input type="checkbox" checked={form.novidades} onChange={e => setForm({ ...form, novidades: e.target.checked })} />
-                    Aceito receber novidades da campanha
-                  </label>
-                </>
-              )}
-
               {activeTab === 'convidar' && (
                 <>
                   {camposBase}
@@ -275,7 +261,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
               </div>
 
               <button type="submit" disabled={loading}>
-                {loading ? 'Enviando…' : activeTab === 'assinar' ? 'QUERO ME MOBILIZAR' : activeTab === 'comite' ? 'CRIAR COMITÊ' : 'ENVIAR CONVITE'}
+                {loading ? 'Enviando…' : activeTab === 'assinar' ? 'QUERO ME MOBILIZAR' : 'ENVIAR CONVITE'}
               </button>
               <button type="button" onClick={onShare}>Compartilhar no WhatsApp</button>
             </form>

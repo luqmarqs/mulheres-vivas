@@ -19,8 +19,7 @@ function buildRows(leads) {
     Cidade: l.cidade ?? '',
     UF: l.uf ?? '',
     Origem: l.origem ?? '',
-    'Intenção': l.intencao === 'organizar' ? 'Participar ou criar comitê' : l.intencao === 'convidar' ? 'Convidar Bancada' : 'Participar',
-    Comitê: l.comites?.nome ?? '',
+    'Intenção': l.intencao === 'convidar' ? 'Convidar Bancada' : 'Participar',
     Data: new Date(l.created_at).toLocaleDateString('pt-BR'),
   }))
 }
@@ -45,7 +44,7 @@ function exportExcel(leads) {
   // Larguras das colunas
   ws['!cols'] = [
     { wch: 30 }, { wch: 16 }, { wch: 30 }, { wch: 20 },
-    { wch: 6 },  { wch: 18 }, { wch: 32 }, { wch: 12 },
+    { wch: 6 },  { wch: 18 }, { wch: 22 }, { wch: 12 },
   ]
 
   const wb = XLSX.utils.book_new()
@@ -90,7 +89,6 @@ function AdminLeads() {
         <select className="adm-input" value={intencao} onChange={e => setIntencao(e.target.value)}>
           <option value="">Todas as intenções</option>
           <option value="participar">Participar</option>
-          <option value="organizar">Participar ou criar comitê</option>
           <option value="convidar">Convidar Bancada</option>
         </select>
       </div>
@@ -112,7 +110,6 @@ function AdminLeads() {
                 <th>Cidade / UF</th>
                 <th>Origem</th>
               <th>Intenção</th>
-                <th>Comitê</th>
                 <th>Data</th>
               </tr>
             </thead>
@@ -134,10 +131,9 @@ function AdminLeads() {
                   </td>
                   <td>
                     <span className={`adm-badge adm-badge--${l.intencao}`}>
-                      {l.intencao === 'organizar' ? 'Comitê' : l.intencao === 'convidar' ? 'Convidar' : 'Participar'}
+                      {l.intencao === 'convidar' ? 'Convidar' : 'Participar'}
                     </span>
                   </td>
-                  <td>{l.comites?.nome ?? '—'}</td>
                   <td>{new Date(l.created_at).toLocaleDateString('pt-BR')}</td>
                 </tr>
               ))}

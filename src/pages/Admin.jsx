@@ -2,17 +2,13 @@ import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import AdminDashboard from '../components/admin/AdminDashboard'
 import AdminLeads from '../components/admin/AdminLeads'
-import AdminComites from '../components/admin/AdminComites'
 import AdminUsuarios from '../components/admin/AdminUsuarios'
-import AdminPropostasComite from '../components/admin/AdminPropostasComite'
 import AdminPropostasAgenda from '../components/admin/AdminPropostasAgenda'
 import AdminAgendas from '../components/admin/AdminAgendas'
 
 const TABS = [
   { id: 'dashboard',         label: 'Dashboard' },
   { id: 'leads',             label: 'Leads' },
-  { id: 'comites',           label: 'Comitês' },
-  { id: 'propostas_comite',  label: 'Prop. Comitê' },
   { id: 'propostas_agenda',  label: 'Prop. Agenda' },
   { id: 'agendas',           label: 'Agendas' },
   { id: 'usuarios',          label: 'Admins' },
@@ -92,8 +88,6 @@ function Admin() {
 
         {tab === 'dashboard' && <AdminDashboard />}
         {tab === 'leads' && <AdminLeads />}
-        {tab === 'comites' && <AdminComites />}
-        {tab === 'propostas_comite' && <AdminPropostasComite />}
         {tab === 'propostas_agenda' && <AdminPropostasAgenda />}
         {tab === 'agendas' && <AdminAgendas />}
         {tab === 'usuarios' && <AdminUsuarios />}

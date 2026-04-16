@@ -2,27 +2,11 @@ import { supabase } from './supabase'
 import { normalizePhoneBR } from '../utils/phone'
 
 /**
- * Busca o id do comitê ativo para uma cidade, ou null se não existir.
- */
-export async function comiteIdPorCidade(cidade) {
-  if (!cidade) return null
-  const { data } = await supabase
-    .from('comites')
-    .select('id')
-    .ilike('cidade', cidade)
-    .eq('ativo', true)
-    .limit(1)
-    .maybeSingle()
-  return data?.id ?? null
-}
-
-/**
  * Insere um lead evitando duplicidade por telefone.
  * Retorna { error: string | null }
  */
 export async function insertLead(lead) {
   const telefone = normalizePhoneBR(lead.telefone)
-  const comite_id = await comiteIdPorCidade(lead.cidade)
 
   const { data: existente } = await supabase
     .from('leads')
@@ -35,7 +19,6 @@ export async function insertLead(lead) {
   const { error } = await supabase.from('leads').insert({
     ...lead,
     telefone,
-    comite_id,
     origem: lead.origem ?? 'form_abaixo_assinado',
   })
 
@@ -52,7 +35,6 @@ const RANK_INTENCAO = { organizar: 3, convidar: 2, participar: 1 }
  */
 export async function upsertLead(form, intencao) {
   const telefone = normalizePhoneBR(form.telefone)
-  const comite_id = await comiteIdPorCidade(form.cidade)
 
   const { data: existente } = await supabase
     .from('leads')
@@ -62,7 +44,7 @@ export async function upsertLead(form, intencao) {
 
   if (existente) {
     if ((RANK_INTENCAO[intencao] ?? 0) > (RANK_INTENCAO[existente.intencao] ?? 0)) {
-      await supabase.from('leads').update({ intencao, comite_id }).eq('id', existente.id)
+      await supabase.from('leads').update({ intencao }).eq('id', existente.id)
     }
     return
   }
@@ -74,9 +56,8 @@ export async function upsertLead(form, intencao) {
     cidade: form.cidade || null,
     uf: form.uf || null,
     nascimento: form.nascimento || null,
-    comite_id,
     intencao,
     novidades: form.novidades ?? true,
-    origem: intencao === 'organizar' ? 'form_comite' : 'form_agenda',
+    origem: 'form_agenda',
   })
 }

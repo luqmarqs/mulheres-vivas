@@ -95,16 +95,15 @@ function AdminDashboard() {
       <p className="adm-section-desc">Visão geral da campanha em tempo real. Use o toggle <strong>7 / 30 dias</strong> no gráfico para mudar o período analisado.</p>
 
       {/* STAT CARDS */}
-      <div className="adm-stats-grid adm-stats-grid--6">
+      <div className="adm-stats-grid adm-stats-grid--5">
         <StatCard label="Total de leads" value={stats.totalLeads} />
         <StatCard label="Últimos 7 dias" value={stats.leads7dias} sub="novos leads" />
         <StatCard label="Últimos 30 dias" value={stats.leads30dias} sub="novos leads" />
-        <StatCard label="Comitês ativos" value={stats.totalComites} />
         <StatCard label="Agendas publicadas" value={stats.totalAgendas} />
         <StatCard
           label="Propostas pendentes"
-          value={(stats.propostasComite ?? 0) + (stats.propostasAgenda ?? 0)}
-          sub={`${stats.propostasComite} comitê · ${stats.propostasAgenda} agenda`}
+          value={stats.propostasAgenda ?? 0}
+          sub="propostas de agenda"
           accent="#c49eea"
         />
       </div>
