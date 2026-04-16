@@ -1624,6 +1624,62 @@ select:focus {
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* GA STRIP no dashboard */
+.adm-ga-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.adm-ga-strip-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--purple-light);
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.adm-ga-strip-loading {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.adm-ga-strip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.adm-ga-strip-item--accent .adm-ga-strip-value {
+  color: #25d366;
+}
+
+.adm-ga-strip-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.adm-ga-strip-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .adm-ga-strip { gap: 16px; }
+  .adm-ga-strip-value { font-size: 18px; }
+}
+
 .adm-ga-periodo {
   font-size: 11px;
   font-weight: 700;

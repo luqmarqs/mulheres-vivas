@@ -6,6 +6,7 @@ import {
   Tooltip, Filler, ArcElement, Legend,
 } from 'chart.js'
 import { useAdminStats } from '../../hooks/useAdminStats'
+import { useGAMetrics } from '../../hooks/useGAMetrics'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler, ArcElement, Legend)
 
@@ -22,8 +23,16 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
+function fmtSec(sec) {
+  if (!sec) return '—'
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  return m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
 function AdminDashboard() {
   const { stats, loading } = useAdminStats()
+  const { data: ga, loading: gaLoading } = useGAMetrics()
   const [periodo, setPeriodo] = useState(7)
 
   if (loading) return <div className="adm-loading">Carregando…</div>
@@ -106,6 +115,43 @@ function AdminDashboard() {
           sub="propostas de agenda"
           accent="#c49eea"
         />
+      </div>
+
+      {/* MÉTRICAS GA4 */}
+      <div className="adm-ga-strip">
+        <span className="adm-ga-strip-label">Site · últimos 7 dias (GA4)</span>
+        {gaLoading ? (
+          <span className="adm-ga-strip-loading">carregando…</span>
+        ) : ga?.resumo7 ? (
+          <>
+            <div className="adm-ga-strip-item">
+              <span className="adm-ga-strip-value">{ga.resumo7.activeUsers.toLocaleString('pt-BR')}</span>
+              <span className="adm-ga-strip-desc">visitantes</span>
+            </div>
+            <div className="adm-ga-strip-item">
+              <span className="adm-ga-strip-value">{ga.resumo7.pageViews.toLocaleString('pt-BR')}</span>
+              <span className="adm-ga-strip-desc">visualizações</span>
+            </div>
+            <div className="adm-ga-strip-item">
+              <span className="adm-ga-strip-value">{ga.resumo7.sessions.toLocaleString('pt-BR')}</span>
+              <span className="adm-ga-strip-desc">sessões</span>
+            </div>
+            <div className="adm-ga-strip-item">
+              <span className="adm-ga-strip-value">{fmtSec(ga.resumo7.avgSessionSec)}</span>
+              <span className="adm-ga-strip-desc">tempo médio</span>
+            </div>
+            {ga.resumo7.activeUsers > 0 && (
+              <div className="adm-ga-strip-item adm-ga-strip-item--accent">
+                <span className="adm-ga-strip-value">
+                  {((stats.leads7dias / ga.resumo7.activeUsers) * 100).toFixed(1)}%
+                </span>
+                <span className="adm-ga-strip-desc">conversão</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="adm-ga-strip-loading">Analytics não configurado</span>
+        )}
       </div>
 
       {/* GRÁFICO DE LINHA */}
