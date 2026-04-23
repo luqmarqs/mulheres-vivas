@@ -213,7 +213,7 @@ function MapaFeminicidio() {
 
       painel.innerHTML = `
         <h2 class="mc-painel-titulo">Estado de SP</h2>
-        <p class="mc-meta">Ano: 2026 · Clique em um ponto para detalhar</p>
+        <p class="mc-meta">Jan–Fev 2026 · Clique em um ponto para detalhar</p>
         <div class="mc-resumo">
           <div class="mc-chip"><strong>${totais.consumado}</strong><span>Consumados</span></div>
           <div class="mc-chip"><strong>${totais.tentativa}</strong><span>Tentativas</span></div>
@@ -252,7 +252,7 @@ function MapaFeminicidio() {
           <h2 class="mc-painel-titulo">${escapeHtml(cidade)}</h2>
           <button id="mc-btn-voltar" class="mc-btn-voltar" type="button">← Voltar</button>
         </div>
-        <p class="mc-meta">IBGE: ${escapeHtml(ibge)} · Ano: 2026</p>
+        <p class="mc-meta">IBGE: ${escapeHtml(ibge)} · Jan–Fev 2026</p>
         <div class="mc-resumo">
           <div class="mc-chip"><strong>${dados.consumado}</strong><span>Consumados</span></div>
           <div class="mc-chip"><strong>${dados.tentativa}</strong><span>Tentativas</span></div>
@@ -472,6 +472,12 @@ function MapaFeminicidio() {
             {label}
           </span>
         ))}
+      </div>
+      <div className="mc-fonte">
+        Dados referentes a janeiro e fevereiro de 2026 · Fonte:{' '}
+        <a href="https://www.ssp.sp.gov.br" target="_blank" rel="noopener noreferrer">
+          Secretaria da Segurança Pública do Estado de São Paulo (SSP-SP)
+        </a>
       </div>
     </div>
   )

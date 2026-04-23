@@ -567,6 +567,25 @@ body {
   flex-shrink: 0;
 }
 
+.mc-fonte {
+  padding: 6px 16px;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: rgba(107, 47, 160, 0.03);
+  text-align: right;
+}
+
+.mc-fonte a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mc-fonte a:hover {
+  color: var(--primary);
+}
+
 
 /* ========================= */
 /* FORM SECTION */
