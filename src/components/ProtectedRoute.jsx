@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isAdmin } from '../hooks/useAdmins'
-import { supabaseConfigurado } from '../lib/supabase'
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth()
@@ -13,11 +12,6 @@ function ProtectedRoute({ children }) {
 
     if (!session) {
       setAdminCheck('denied')
-      return
-    }
-
-    if (!supabaseConfigurado) {
-      setAdminCheck('ok')
       return
     }
 

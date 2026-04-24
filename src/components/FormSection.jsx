@@ -13,7 +13,7 @@ const TABS = [
 const EMPTY_FORM = {
   nome: '', nascimento: '', telefone: '', email: '',
   cidade: '', uf: '', novidades: true,
-  mensagem: '',
+  mensagem: '', honeypot: '',
 }
 
 function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, setEmailErro, ufs, cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeSelecionada, cidadeRef, mostrarSugestoes, setMostrarSugestoes }) {
@@ -130,15 +130,36 @@ function FormSection({ onOpenPrivacy, onShare }) {
   const [loading, setLoading] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [erro, setErro] = useState('')
+  const [startedAt, setStartedAt] = useState(Date.now())
+  const [submitLocked, setSubmitLocked] = useState(false)
 
   const { cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeSelecionada, ufs } = useCidades(form.uf)
   const cidadeRef = useRef(null)
+  const lastSubmitTimeRef = useRef(0)
+  const hasInteractedRef = useRef(false)
 
   useEffect(() => {
     const handler = e => { if (cidadeRef.current && !cidadeRef.current.contains(e.target)) setMostrarSugestoes(false) }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    
+    const interactionHandler = () => { hasInteractedRef.current = true }
+    window.addEventListener('mousemove', interactionHandler, { once: true })
+    window.addEventListener('keydown', interactionHandler, { once: true })
+    window.addEventListener('touchstart', interactionHandler, { once: true })
+    window.addEventListener('click', interactionHandler, { once: true })
+
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      window.removeEventListener('mousemove', interactionHandler)
+      window.removeEventListener('keydown', interactionHandler)
+      window.removeEventListener('touchstart', interactionHandler)
+      window.removeEventListener('click', interactionHandler)
+    }
   }, [])
+
+  useEffect(() => {
+    setStartedAt(Date.now())
+  }, [activeTab])
 
   function handleTabChange(tab) {
     setActiveTab(tab)
@@ -156,11 +177,47 @@ function FormSection({ onOpenPrivacy, onShare }) {
     e.preventDefault()
     setErro('')
 
-    if (!validarTelefone(form.telefone)) { setTelefoneErro('Telefone inválido'); return }
+    if (form.honeypot) {
+      return
+    }
 
+    if (!hasInteractedRef.current) {
+      setErro('Comportamento suspeito detectado. Por favor, interaja com a página e tente novamente.')
+      return
+    }
+
+    const sessionKey = 'form_submissions_count'
+    const submissionsCount = parseInt(sessionStorage.getItem(sessionKey) || '0', 10)
+    if (submissionsCount >= 5) {
+      setErro('Limite de envios atingido para esta sessão. Tente novamente mais tarde.')
+      return
+    }
+
+    if (submitLocked) {
+      setErro('Aguarde antes de enviar novamente.')
+      return
+    }
+
+    const now = Date.now()
+    const minDelay = 2500
+    const recentSubmitLimit = 3000
+
+    if (now - startedAt < minDelay) {
+      setErro('Aguarde alguns segundos antes de enviar o formulário.')
+      return
+    }
+
+    if (now - lastSubmitTimeRef.current < recentSubmitLimit) {
+      setErro('Aguarde um pouco antes de reenviar.')
+      return
+    }
+
+    lastSubmitTimeRef.current = now
+    setSubmitLocked(true)
     setLoading(true)
+    sessionStorage.setItem('form_submissions_count', submissionsCount + 1)
 
-    if (!supabaseConfigurado) { setLoading(false); setSucesso(true); return }
+    if (!supabaseConfigurado) { setLoading(false); setSucesso(true); window.setTimeout(() => setSubmitLocked(false), 6000); return }
 
     let result
     if (activeTab === 'convidar') {
@@ -224,6 +281,17 @@ function FormSection({ onOpenPrivacy, onShare }) {
             <FormSucesso tab={activeTab} onReset={() => { setSucesso(false); setForm(EMPTY_FORM); setCidadeBusca('') }} onShare={onShare} />
           ) : (
             <form onSubmit={handleSubmit}>
+              <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+                <label htmlFor="website">Website</label>
+                <input
+                  id="website"
+                  name="website"
+                  autoComplete="off"
+                  tabIndex="-1"
+                  value={form.honeypot}
+                  onChange={e => setForm({ ...form, honeypot: e.target.value })}
+                />
+              </div>
               {activeTab === 'assinar' && (
                 <>
                   {camposBase}
