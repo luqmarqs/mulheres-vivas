@@ -6,29 +6,29 @@
 -- LEADS
 create table if not exists leads (
   id         uuid primary key default gen_random_uuid(),
-  nome       text not null,
-  telefone   text not null,
-  email      text,
-  cidade     text,
-  uf         text,
+  nome       text not null check (char_length(nome) <= 150),
+  telefone   text not null check (char_length(telefone) <= 30),
+  email      text check (char_length(email) <= 255),
+  cidade     text check (char_length(cidade) <= 100),
+  uf         text check (char_length(uf) <= 2),
   nascimento date,
-  intencao   text default 'participar', -- 'participar' | 'convidar'
+  intencao   text default 'participar' check (char_length(intencao) <= 50), -- 'participar' | 'convidar'
   novidades  boolean default true,
-  origem     text,
+  origem     text check (char_length(origem) <= 100),
   created_at timestamptz default now()
 );
 
 -- PROPOSTAS DE AGENDA
 create table if not exists propostas_agenda (
   id         uuid primary key default gen_random_uuid(),
-  nome       text not null,
-  telefone   text not null,
-  email      text,
-  cidade     text,
-  uf         text,
-  mensagem   text,
-  status     text default 'pendente', -- 'pendente' | 'confirmado' | 'recusado'
-  observacao text,
+  nome       text not null check (char_length(nome) <= 150),
+  telefone   text not null check (char_length(telefone) <= 30),
+  email      text check (char_length(email) <= 255),
+  cidade     text check (char_length(cidade) <= 100),
+  uf         text check (char_length(uf) <= 2),
+  mensagem   text check (char_length(mensagem) <= 2000),
+  status     text default 'pendente' check (char_length(status) <= 50), -- 'pendente' | 'confirmado' | 'recusado'
+  observacao text check (char_length(observacao) <= 1000),
   created_at timestamptz default now()
 );
 
