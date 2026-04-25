@@ -16,10 +16,18 @@ const EMPTY_FORM = {
   mensagem: '', honeypot: '',
 }
 
-function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, setEmailErro, ufs, cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeSelecionada, cidadeRef, mostrarSugestoes, setMostrarSugestoes }) {
+function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, setEmailErro, ufs, cidades, cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeErro, setCidadeSelecionada, cidadeRef, mostrarSugestoes, setMostrarSugestoes }) {
   const validarEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
 
   const [openUF, setOpenUF] = useState(false)
+
+  const cidadeBuscaRef = useRef(cidadeBusca)
+  const formRef = useRef(form)
+
+  useEffect(() => {
+    cidadeBuscaRef.current = cidadeBusca
+    formRef.current = form
+  }, [cidadeBusca, form])
 
   return (
     <>
@@ -60,7 +68,13 @@ function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, s
         {openUF && (
           <div className="options">
             {ufs.map(uf => (
-              <div key={uf.sigla} onMouseDown={() => { setForm({ ...form, uf: uf.sigla }); setOpenUF(false) }}>
+              <div key={uf.sigla} onMouseDown={() => { 
+                setForm({ ...form, uf: uf.sigla, cidade: '' })
+                setCidadeBusca('')
+                setCidadeSelecionada('')
+                setCidadeErro('')
+                setOpenUF(false) 
+              }}>
                 {uf.nome}
               </div>
             ))}
@@ -75,9 +89,26 @@ function CamposBase({ form, setForm, telefoneErro, setTelefoneErro, emailErro, s
           autoComplete="off"
           onClick={e => e.stopPropagation()}
           onChange={e => {
-            setCidadeBusca(e.target.value)
-            setForm({ ...form, cidade: e.target.value })
+            const val = e.target.value
+            setCidadeBusca(val)
+            setForm({ ...form, cidade: val })
+            
+            if (val && !form.uf) {
+              setCidadeErro('Selecione o Estado (UF) primeiro.')
+            } else {
+              setCidadeErro('')
+            }
             setMostrarSugestoes(true)
+          }}
+          onBlur={() => {
+            setTimeout(() => {
+              const currentBusca = cidadeBuscaRef.current
+              const currentForm = formRef.current
+              if (currentBusca && currentForm.uf && cidades) {
+                const isValid = cidades.some(c => c.nome.toLowerCase() === currentBusca.toLowerCase())
+                if (!isValid) setCidadeErro('Cidade inválida.')
+              }
+            }, 150)
           }}
         />
         {mostrarSugestoes && cidadesFiltradas.length > 0 && (
@@ -133,7 +164,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
   const [startedAt, setStartedAt] = useState(Date.now())
   const [submitLocked, setSubmitLocked] = useState(false)
 
-  const { cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeSelecionada, ufs } = useCidades(form.uf)
+  const { cidades, cidadeBusca, setCidadeBusca, cidadesFiltradas, cidadeErro, setCidadeErro, setCidadeSelecionada, ufs } = useCidades(form.uf)
   const cidadeRef = useRef(null)
   const lastSubmitTimeRef = useRef(0)
   const hasInteractedRef = useRef(false)
@@ -167,6 +198,7 @@ function FormSection({ onOpenPrivacy, onShare }) {
     setCidadeBusca('')
     setTelefoneErro('')
     setEmailErro('')
+    setCidadeErro('')
     setErro('')
     setSucesso(false)
   }
@@ -212,6 +244,19 @@ function FormSection({ onOpenPrivacy, onShare }) {
       return
     }
 
+    if (form.cidade && !form.uf) {
+      setCidadeErro('Selecione o Estado (UF) primeiro.')
+      return
+    }
+
+    if (form.uf && form.cidade) {
+      const isValid = cidades.some(c => c.nome.toLowerCase() === form.cidade.toLowerCase())
+      if (!isValid) {
+        setCidadeErro('Cidade inválida.')
+        return
+      }
+    }
+
     lastSubmitTimeRef.current = now
     setSubmitLocked(true)
     setLoading(true)
@@ -245,9 +290,9 @@ function FormSection({ onOpenPrivacy, onShare }) {
       form={form} setForm={setForm}
       telefoneErro={telefoneErro} setTelefoneErro={setTelefoneErro}
       emailErro={emailErro} setEmailErro={setEmailErro}
-      ufs={ufs}
+      ufs={ufs} cidades={cidades}
       cidadeBusca={cidadeBusca} setCidadeBusca={setCidadeBusca}
-      cidadesFiltradas={cidadesFiltradas} cidadeErro={cidadeErro}
+      cidadesFiltradas={cidadesFiltradas} cidadeErro={cidadeErro} setCidadeErro={setCidadeErro}
       setCidadeSelecionada={setCidadeSelecionada}
       cidadeRef={cidadeRef}
       mostrarSugestoes={mostrarSugestoes} setMostrarSugestoes={setMostrarSugestoes}

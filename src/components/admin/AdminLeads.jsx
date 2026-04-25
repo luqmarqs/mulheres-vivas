@@ -19,7 +19,6 @@ function buildRows(leads) {
     Cidade: l.cidade ?? '',
     UF: l.uf ?? '',
     Origem: l.origem ?? '',
-    'Intenção': l.intencao === 'convidar' ? 'Convidar Bancada' : 'Participar',
     Data: new Date(l.created_at).toLocaleDateString('pt-BR'),
   }))
 }
@@ -44,7 +43,7 @@ function exportExcel(leads) {
   // Larguras das colunas
   ws['!cols'] = [
     { wch: 30 }, { wch: 16 }, { wch: 30 }, { wch: 20 },
-    { wch: 6 },  { wch: 18 }, { wch: 22 }, { wch: 12 },
+    { wch: 6 },  { wch: 18 }, { wch: 12 },
   ]
 
   const wb = XLSX.utils.book_new()
@@ -56,9 +55,8 @@ function AdminLeads() {
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [cidade, setCidade] = useState('')
-  const [intencao, setIntencao] = useState('')
 
-  const { leads, loading, error, refetch } = useLeads({ search, cidade, intencao })
+  const { leads, loading, error, refetch } = useLeads({ search, cidade })
 
   const applySearch = useDebounce((val) => setSearch(val), 400)
 
@@ -71,7 +69,7 @@ function AdminLeads() {
           <button className="adm-btn adm-btn-outline" title="Baixar lista filtrada em planilha Excel" onClick={() => exportExcel(leads)}>↓ Excel</button>
         </div>
       </div>
-      <p className="adm-section-desc">Todos os contatos que preencheram qualquer aba do formulário do site. Use os filtros para segmentar por nome, cidade ou intenção. O telefone é um link direto para o WhatsApp da pessoa.</p>
+      <p className="adm-section-desc">Todos os contatos que preencheram qualquer aba do formulário do site. Use os filtros para segmentar por nome ou cidade. O telefone é um link direto para o WhatsApp da pessoa.</p>
 
       <div className="adm-filters">
         <input
@@ -86,11 +84,6 @@ function AdminLeads() {
           value={cidade}
           onChange={e => setCidade(e.target.value)}
         />
-        <select className="adm-input" value={intencao} onChange={e => setIntencao(e.target.value)}>
-          <option value="">Todas as intenções</option>
-          <option value="participar">Participar</option>
-          <option value="convidar">Convidar Bancada</option>
-        </select>
       </div>
 
       {error && <p className="adm-error">{error}</p>}
@@ -109,7 +102,6 @@ function AdminLeads() {
                 <th>Email</th>
                 <th>Cidade / UF</th>
                 <th>Origem</th>
-              <th>Intenção</th>
                 <th>Data</th>
               </tr>
             </thead>
@@ -127,11 +119,6 @@ function AdminLeads() {
                   <td>
                     <span className="adm-badge adm-badge--origem">
                       {l.origem ?? '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`adm-badge adm-badge--${l.intencao}`}>
-                      {l.intencao === 'convidar' ? 'Convidar' : 'Participar'}
                     </span>
                   </td>
                   <td>{new Date(l.created_at).toLocaleDateString('pt-BR')}</td>
